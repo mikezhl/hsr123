@@ -27,60 +27,61 @@
         </PlanningScene>
 
         <Maps>
-            <EffPosition Name="Position">
-                <EndEffector>
-                    <Frame Link="hand_palm_link" LinkOffset="0 0 0.08 0.7071 0 0.7071 0"/>
-                </EndEffector>
-            </EffPosition>
-            <EffAxisAlignment Name="AxisAlignment">
-                <EndEffector>
-                    <Frame Link="hand_palm_link" Direction="0 -1 0" Axis="0 0 1"/>
-                </EndEffector>
-            </EffAxisAlignment>
-            <JointLimit Name="JL" SafePercentage="0.0"/>
-            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/>
-            <SumOfPenetrations Name="SumOfPenetrations" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/>
-            <PointToPlane Name="LiftOffTable">
-                <EndEffector>
-                    <Frame Link="hand_palm_link" Base="Table"/>
-                </EndEffector>
-            </PointToPlane>
+            <JointLimit Name="JointLimit" SafePercentage="0.0"/>
+
             <EffPositionXY Name="BasePosition">
                 <EndEffector>
                     <Frame Link="base_footprint" Base="BaseTarget"/>
                 </EndEffector>
             </EffPositionXY>
-            <JointPose Name="BaseOrientation" JointMap="2" JointRef="0"/>
+
+            <EffPosition Name="EffPosition">
+                <EndEffector>
+                    <Frame Link="hand_palm_link" LinkOffset="0 0 0.04"/>
+                </EndEffector>
+            </EffPosition>
+
+            <EffAxisAlignment Name="EffAxisAlignment">
+                <EndEffector>
+                    <Frame Link="hand_palm_link" Direction="0 0 1" Axis="1 0 0"/>
+                </EndEffector>
+            </EffAxisAlignment>
+            
+            <EffAxisAlignment Name="EffAxisAlignment1">
+                <EndEffector>
+                    <Frame Link="hand_palm_link" Direction="1 -1 0" Axis="0 0 1"/>
+                </EndEffector>
+            </EffAxisAlignment>
+
+            <PointToPlane Name="LiftOffTable">
+                <EndEffector>
+                    <Frame Link="hand_palm_link" Base="Table"/>
+                </EndEffector>
+            </PointToPlane>
+            
+            <JointPose Name="FinalPose" JointMap="2 3 4 5 6 7" JointRef="0 0 0 -1.57 -1.57 0"/>
+
+            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/>
+            <SumOfPenetrations Name="SumOfPenetrations" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/>
         </Maps>
 
         <Cost>
-            <!-- Follow the given base trajectory in XY -->
-            <Task Task="BasePosition" Rho="1e4"/>
-            <!-- <Task Task="BasePosition" Rho="0"/> -->
-
-            <!-- Achieve a zero-rotation at the end of the trajectory. Rho set in Python. -->
-            <!-- made changes here ** -->
-            <Task Task="BaseOrientation" Rho="0"/>
-
-            <!-- Position for the end-effector during the grasping phase. Rho set in Python. -->
-            <Task Task="Position" Rho="0"/>
-
-            <!-- Alignment of the end-effector during/after the grasphing phase. Rho set in Python. -->
-            <Task Task="AxisAlignment" Rho="0"/>
-
             <!-- Penalise joint limit violation. Active during the entire task. -->
-            <Task Task="JL" Rho="1e3"/>
-
+            <Task Task="JointLimit" Rho="1e4"/>
+            <!-- Follow the given base trajectory in XY -->
+            <Task Task="BasePosition" Rho="1e3"/>
+            <!-- Position for the end-effector during the grasping phase. Rho set in Python. -->
+            <Task Task="EffPosition" Rho="0"/>
+            <!-- Alignment of the end-effector during/after the grasphing phase. Rho set in Python. -->
+            <Task Task="EffAxisAlignment" Rho="0"/>
+            <Task Task="EffAxisAlignment1" Rho="0"/>
+            <!-- Avoid collision with table -->
+            <Task Task="LiftOffTable" Rho="0" Goal="0.05"/>
+            <!-- Achieve a zero-rotation at the end of the trajectory. Rho set in Python. -->
+            <Task Task="FinalPose" Rho="0"/>
             <!-- Collision avoidance -->
             <!--<Task Task="SCD" Rho="1e1"/> -->
             <!-- <Task Task="SumOfPenetrations" Rho="1e2"/> -->
-            
-            <!-- Experimental costs, now removed -->
-            <!-- <Task Task="RestPosition"/> -->
-            <!--<Task Task="LiftOffTable" Rho="0" Goal="0.05"/>-->
-            <!--<Task Task="LiftOffTable" Rho="0" Goal="0.15"/>-->
-            <Task Task="LiftOffTable" Rho="0" Goal="0.05"/>
-            <!-- <Task Task="JointPose" Rho="0"/> -->
         </Cost>
 
         <T>100</T>

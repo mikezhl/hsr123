@@ -25,6 +25,7 @@ def Simple_Action_Clients():
         control_msgs.msg.FollowJointTrajectoryAction)
     cli_arm.wait_for_server()
     cli_base.wait_for_server()
+    
     #Make sure the controller is running
     rospy.wait_for_service('/hsrb/controller_manager/list_controllers')
     list_controllers = (
@@ -108,7 +109,6 @@ def follow(received_traj,grasp_t, dt):
     arm_list = arm_list[1::]
 
     # Get user input to run traj in gazebo
-    print("you can run ./log_vel.py now.")
     print("press enter to continue")
     input()
     print("loading arm goal")
