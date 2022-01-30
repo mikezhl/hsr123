@@ -17,15 +17,20 @@ git clone https://github.com/ToyotaResearchInstitute/hsr_meshes.git
 sudo apt install ros-noetic-exotica-examples
 ```
 
-## Instructions
+## Instructions - Basic
 #### Description
-- Pick up a soda can.
+- Pick up a soda can in a fixed place without stopping.
 #### Run a trajectory
 - Start the gazebo simulation:
 `roslaunch hsr123 basic.launch`
 - Wait for gazebo to finish loading and press play to start the simulation
-- In an new terminal window, run `hsr123/src/traj_follow.py`
-#### Generate a trajectory using AICO
-- Start the rviz:
+- In an new terminal window, run `hsr123/src/basic_traj_follow.py`
+#### Generate a new trajectory using AICO
+- Start the rviz if gazebo isn't running:
 `roslaunch hsr123 rviz_test.launch`
-- In an new terminal window, source `devel/setup.bash` and run `hsr123/src/traj_aico.py`
+- In an new terminal window, source `devel/setup.bash` and run `hsr123/src/basic_traj_aico.py`
+
+## Instructions - Detection
+#### Description
+- Pick up a soda can in a ramdon place without stopping.
+#### To be continued

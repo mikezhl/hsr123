@@ -42,5 +42,6 @@
         args="-file $(find hsr123)/models/hsr_coke_with_april/model.sdf -sdf -x $(arg bottle_x) -y $(arg bottle_y) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle" />
   <!-- <node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model"
         args="-file $(find hsr123)/models/hsr_coke_with_ar/model.sdf -sdf -x $(arg bottle_x) -y $(arg bottle_y) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle" /> -->
-
+  
+  <include file="$(find hsr123)/launch/includes/apriltag_detection.launch"/>
 </launch>
