@@ -494,9 +494,9 @@ Visualization Manager:
         All Enabled: false
         exotica/BaseTarget:
           Value: false
-        exotica/Frame0Ahand_palm_link:
+        exotica/Frame0Abase_footprint:
           Value: false
-        exotica/Frame0Bworld_frame:
+        exotica/Frame0BBaseTarget:
           Value: false
         exotica/Frame1Ahand_palm_link:
           Value: false
@@ -508,11 +508,23 @@ Visualization Manager:
           Value: false
         exotica/Frame3Ahand_palm_link:
           Value: false
-        exotica/Frame3BTable:
+        exotica/Frame3Bworld_frame:
           Value: false
-        exotica/Frame4Abase_footprint:
+        exotica/Frame4Ahand_palm_link:
           Value: false
-        exotica/Frame4BBaseTarget:
+        exotica/Frame4Bworld_frame:
+          Value: false
+        exotica/Frame5Ahand_palm_link:
+          Value: false
+        exotica/Frame5Bworld_frame:
+          Value: false
+        exotica/Frame6Ahand_palm_link:
+          Value: false
+        exotica/Frame6Bworld_frame:
+          Value: false
+        exotica/Frame7Ahand_palm_link:
+          Value: false
+        exotica/Frame7BTable:
           Value: false
         exotica/SodaCan:
           Value: false
@@ -605,7 +617,7 @@ Visualization Manager:
         exotica/hand_motor_dummy_link:
           Value: false
         exotica/hand_palm_link:
-          Value: true
+          Value: false
         exotica/hand_palm_link_collision_0:
           Value: false
         exotica/hand_r_distal_link:
@@ -655,7 +667,7 @@ Visualization Manager:
         exotica/torso_lift_link_collision_0:
           Value: false
         exotica/world_frame:
-          Value: true
+          Value: false
         exotica/world_joint/theta:
           Value: false
         exotica/world_joint/x:
@@ -669,7 +681,7 @@ Visualization Manager:
         exotica/wrist_ft_sensor_frame:
           Value: false
         exotica/wrist_ft_sensor_mount_link:
-          Value: true
+          Value: false
         exotica/wrist_roll_link:
           Value: false
         exotica/wrist_roll_link_collision_0:
@@ -684,8 +696,8 @@ Visualization Manager:
         exotica/world_frame:
           exotica/BaseTarget:
             {}
-          exotica/Frame0Bworld_frame:
-            exotica/Frame0Ahand_palm_link:
+          exotica/Frame0BBaseTarget:
+            exotica/Frame0Abase_footprint:
               {}
           exotica/Frame1Bworld_frame:
             exotica/Frame1Ahand_palm_link:
@@ -693,11 +705,20 @@ Visualization Manager:
           exotica/Frame2Bworld_frame:
             exotica/Frame2Ahand_palm_link:
               {}
-          exotica/Frame3BTable:
+          exotica/Frame3Bworld_frame:
             exotica/Frame3Ahand_palm_link:
               {}
-          exotica/Frame4BBaseTarget:
-            exotica/Frame4Abase_footprint:
+          exotica/Frame4Bworld_frame:
+            exotica/Frame4Ahand_palm_link:
+              {}
+          exotica/Frame5Bworld_frame:
+            exotica/Frame5Ahand_palm_link:
+              {}
+          exotica/Frame6Bworld_frame:
+            exotica/Frame6Ahand_palm_link:
+              {}
+          exotica/Frame7BTable:
+            exotica/Frame7Ahand_palm_link:
               {}
           exotica/SodaCan:
             {}
@@ -895,7 +916,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.834425926208496
+      Distance: 1.4680023193359375
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -903,17 +924,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.7599893808364868
-        Y: 0.15864060819149017
-        Z: 0.4263342618942261
+        X: 0.9914526343345642
+        Y: -0.1971641629934311
+        Z: 0.8812606334686279
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5353991985321045
+      Pitch: 0.2853993773460388
       Target Frame: <Fixed Frame>
-      Yaw: 5.853149890899658
+      Yaw: 4.7981390953063965
     Saved: ~
 Window Geometry:
   Displays:

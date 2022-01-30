@@ -33,12 +33,12 @@
   <arg name="table_x" default="0.7" />
   <arg name="table_y" default="-0.7" />
   <node name="spawn_table" pkg="gazebo_ros" type="spawn_model"
-        args="-file $(find hsr123)/models/meeting_room_table/model.sdf -sdf -x $(arg table_x) -y $(arg table_y) -model table" />
+        args="-file $(find hsr123)/models/table/model.sdf -sdf -x $(arg table_x) -y $(arg table_y) -model table" />
   <arg name="bottle_x" default="0.9" />
   <arg name="bottle_y" default="-0.4" />
-  <arg name="bottle_z" default="0.8125" />
+  <arg name="bottle_z" default="0.8" />
   <arg name="bottle_Y" default="2.5" />
   <node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model"
-        args="-file $(find hsr123)/models/hsr_soda_with_marker/model.sdf -sdf -x $(arg bottle_x) -y $(arg bottle_y) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle" />
+        args="-file $(find hsr123)/models/hsr_coke_with_ar/model.sdf -sdf -x $(arg bottle_x) -y $(arg bottle_y) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle" />
 
 </launch>

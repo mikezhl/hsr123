@@ -42,16 +42,26 @@ q_start = np.clip(q_start, joint_limits[:,0], joint_limits[:,1])
 problem.update(q_start, 0)
 
 # Set the Task map
-mug_location = scene.fk('SodaCan').get_translation_and_rpy()
+location_can = scene.fk('SodaCan').get_translation_and_rpy()
+location_gripper = scene.fk('hand_palm_link').get_translation_and_rpy()
+relative_direction = location_can-location_gripper
+gripper_orientation = [min(relative_direction[0],relative_direction[1]),relative_direction[1]]
+gripper_orientation = gripper_orientation/(gripper_orientation[0]**2+gripper_orientation[1]**2)**0.5
+print(np.append(gripper_orientation,[0.0]))
 t_grasp_begin = 4.5
 t_grasp_duration = 0.5
 T_grasp_begin = int(t_grasp_begin / problem.tau)
 T_grasp_end = int((t_grasp_begin + t_grasp_duration) / problem.tau)
 for t in range(T_grasp_begin, T_grasp_end):
     problem.set_rho('EffPosition', 1e3, t)
-    problem.set_goal('EffPosition', mug_location[:3], t)
-for t in range(T_grasp_begin-10, problem.T):
-    problem.set_rho('EffAxisAlignment', 1e3, t)
+    problem.set_goal('EffPosition', location_can[:3], t)
+# for i in range(0, problem.T):
+#     problem.set_rho('EffOrientation', 1e1, i)
+#     problem.set_goal('EffOrientation', np.array([1,0,0]), i)
+for t in range(T_grasp_begin-15,T_grasp_begin-10):
+    problem.set_rho('EffAxisAlignment_before_grasp', 1e2, t)
+for t in range(T_grasp_begin, problem.T):
+    problem.set_rho('EffAxisAlignment_after_grasp', 1e3, t)
 problem.set_rho('LiftOffTable', 1e2, T_grasp_begin - 20)
 problem.set_rho('LiftOffTable', 1e2, T_grasp_end + 20)
 problem.set_rho('FinalPose', 1e3, -1)
@@ -64,11 +74,10 @@ problem.initial_trajectory = init_pose
 solution = solver.solve()
 print("Solved in", solver.get_planning_time(), "final cost", problem.get_cost_evolution()[1][-1])
 
-
 midpoint = int((t_grasp_begin + t_grasp_duration)/problem.tau)
 signal.signal(signal.SIGINT, sig_int_handler)
 t = 0
-print("mug_location:",mug_location)
+print("mug_location:",location_can)
 np.save(sys.path[0]+"/trajectories/"+str(traj_version),solution)
 print("Trajectory saved")
 while True:
@@ -80,6 +89,6 @@ while True:
     if t == midpoint:
         scene.attach_object("SodaCan", "hand_palm_link")
     elif t == 0:
-        scene.attach_object_local("SodaCan", "", mug_location)
+        scene.attach_object_local("SodaCan", "", location_can)
 
 

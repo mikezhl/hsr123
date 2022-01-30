@@ -26,23 +26,6 @@
                     </script>
                 </material>
             </visual>
-        
-	    <visual name='Apriltag_00001'>
-	      <pose>0 0.35 0 0 1.57 -1.57</pose>
-	      <geometry>
-	        <box>
-	          <!--<size>0.045 0.045 0.0001</size>-->
-	          <size>0.09 0.09 0.0001</size>
-	        </box>
-	      </geometry>
-	      <material>
-	        <script>
-	          <uri>model://meeting_room_table/materials/scripts</uri>
-	          <uri>model://meeting_room_table/materials/textures</uri>
-	          <name>marker/Apriltag36_11_00001</name>
-	        </script>
-	      </material>
-	    </visual>
         </link>
         <link name='*meeting_room_table_leg1'>
             <pose>0.690000 0.340000 0.362500 0.000000 -0.000000 0.000000</pose>

@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.4">
-    <model name='hsr_soda'>
+    <model name='hsr_coke_with_ar'>
       <link name='link'>
         <pose>0 0 0 0 0 0</pose>
         <inertial>
@@ -14,16 +14,16 @@
             <izz>0.000168</izz>
           </inertia>
         </inertial>
-        <visual name='hsr_soda'>
+        <visual name='hsr_coke'>
           <pose>0.0 0.0 0.0 0 0 0</pose>
           <geometry>
             <mesh>
-              <uri>model://hsr_soda/meshes/hsr_soda.dae</uri>
+              <uri>model://hsr_coke/meshes/hsr_coke.dae</uri>
             </mesh>
           </geometry>
           <material/>
         </visual>
-        <collision name='hsr_soda'>
+        <collision name='hsr_coke'>
           <pose>0.0 0.0 0.0 0 0 0</pose>
           <geometry>
             <cylinder>
@@ -47,24 +47,6 @@
             </contact>
           </surface>
         </collision>
-        
-        <visual name='Apriltag_00000'>
-          <pose>0.035 0 0.0 0 1.57 3.141</pose>
-          <geometry>
-            <box>
-              <!--<size>0.045 0.045 0.0001</size>-->
-              <size>0.09 0.09 0.0001</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>model://hsr_soda_with_marker/materials/scripts</uri>
-              <uri>model://hsr_soda_with_marker/materials/textures</uri>
-              <name>marker/Apriltag36_11_00000</name>
-            </script>
-          </material>
-        </visual>
-
         <velocity_decay>
           <linear>0</linear>
           <angular>0</angular>
@@ -72,6 +54,22 @@
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
         <gravity>1</gravity>
+        <visual name='marker_4000'>
+          <pose>0.04 0 0.0 0 1.57 3.141</pose>
+          <geometry>
+            <box>
+              <size>0.045 0.045 0.0001</size>
+            </box>
+          </geometry>
+
+          <material>
+            <script>
+              <uri>model://marker/4000/scripts</uri>
+              <uri>model://marker/4000/textures</uri>
+              <name>Marker/4000</name>
+            </script>
+          </material>
+        </visual>
       </link>
       <static>0</static>
     </model>
