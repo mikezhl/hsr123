@@ -131,7 +131,7 @@ def follow(received_traj,grasp_t, dt):
 if __name__ == '__main__':
     # Load the trajectory
     # soln = np.load(sys.path[0]+'/trajectories/rob.npy', allow_pickle = False)
-    soln = np.load(sys.path[0]+'/trajectories/123.npy', allow_pickle = False)
+    soln = np.load(sys.path[0]+'/trajectories/detect.npy', allow_pickle = False)
     follow(soln, 4.5, 0.15)
 
 
