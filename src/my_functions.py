@@ -1,7 +1,8 @@
 import rospy
 import tf2_ros
 import numpy as np
-
+import signal
+from pyexotica.publish_trajectory import sig_int_handler
 
 def my_transform_can(rotation):
     import math
@@ -11,6 +12,7 @@ def my_transform_can(rotation):
     tfBuffer = tf2_ros.Buffer()
     listener = tf2_ros.TransformListener(tfBuffer)
     x=0; y=0; z=0; n=0
+    signal.signal(signal.SIGINT, sig_int_handler)
     while True:
         try:
             can_abs = tfBuffer.lookup_transform("map","tag_0", rospy.Time())

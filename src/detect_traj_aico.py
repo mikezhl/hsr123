@@ -7,6 +7,7 @@ import signal
 import numpy as np
 import pyexotica as exo
 from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
+import exotica_core_task_maps_py
 
 from my_functions import my_transform_can, my_plot_analysis, my_get_pose
 def detect_traj_aico(debug=1,tag_pose=2.5,t_grasp_begin=4.5,doplot=0):
@@ -51,14 +52,19 @@ def detect_traj_aico(debug=1,tag_pose=2.5,t_grasp_begin=4.5,doplot=0):
 
     # Set the Task map
     location_can = scene.fk('SodaCan').get_translation_and_rpy()
+    location_gripper = scene.fk('hand_palm_link').get_translation_and_rpy()
+    relative_direction = location_can-location_gripper
+    gripper_orientation = [relative_direction[0],relative_direction[1]]
+    gripper_orientation = gripper_orientation/(gripper_orientation[0]**2+gripper_orientation[1]**2)**0.5
     t_grasp_duration = 0.5
     T_grasp_begin = int(t_grasp_begin / problem.tau)
     T_grasp_end = int((t_grasp_begin + t_grasp_duration) / problem.tau)
+    problem.get_task_maps()["EffAxisAlignment_before_grasp"].set_direction("hand_palm_link",np.append(gripper_orientation,[0.0]))
     for t in range(T_grasp_begin, T_grasp_end):
         problem.set_rho('EffPosition', 1e3, t)
         problem.set_goal('EffPosition', location_can[:3], t)
-    for t in range(T_grasp_begin-15,T_grasp_begin-10):
-        problem.set_rho('EffAxisAlignment_before_grasp', 1e2, t)
+    for t in range(T_grasp_begin-10,T_grasp_begin-5):
+        problem.set_rho('EffAxisAlignment_before_grasp', 1e1, t)
     for t in range(T_grasp_begin, problem.T):
         problem.set_rho('EffAxisAlignment_after_grasp', 1e3, t)
     problem.set_rho('LiftOffTable', 1e2, T_grasp_begin - 20)

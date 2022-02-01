@@ -22,13 +22,13 @@ def close_gripper(hsrb_gripper):
     _GRASP_FORCE=0.2
     hsrb_gripper.apply_force(_GRASP_FORCE, delicate = True)
 
-def transform_base_traj(base_pose, KDLFrame_base):
+def transform_base_traj(base_list, KDLFrame_base):
     '''Takes input of base_pose which is an array [x,y,rot] and a KDLFrame.
         returns [x,y,z,r,p,yaw]
     '''
-    KDLFrame_traj = exo.KDLFrame(np.concatenate((base_pose[0:2],[0,0,0],[base_pose[2]])))
+    KDLFrame_traj = exo.KDLFrame(np.concatenate((base_list[0:2],[0,0,0],[base_list[2]])))
     KDLFrame_goal = KDLFrame_base * KDLFrame_traj
-    return KDLFrame_goal.get_translation_and_rpy()
+    return KDLFrame_traj.get_translation_and_rpy()
 
 def follow(grasp_t, dt, *tag_pose, new_traj=0):
     '''time for grasping, time step of trajectory in seconds, new_traj(0=use a generated traj;1=generate a new traj), pose of tag].
@@ -71,7 +71,7 @@ def follow(grasp_t, dt, *tag_pose, new_traj=0):
     
     # Formulate trajectories - base
     base_list = received_traj[:,0:3]
-    # Move relative to map instead of hsrb_base_link
+    # base_list starts from 0,0,0.
     base_list = np.array([transform_base_traj(base_list[i], KDLFrame_base) for i in range(len(base_list))])
     # Index of x,y,yaw
     col_index = [0,1,5]
@@ -104,6 +104,6 @@ def follow(grasp_t, dt, *tag_pose, new_traj=0):
 
 if __name__ == '__main__':
     # Set tag_pose if new_traj=1
-    # follow(4.5, 0.15, new_traj=0)
-    follow(4.5, 0.15, 2.5, new_traj=1)
+    follow(4.5, 0.15, new_traj=0)
+    # follow(4.5, 0.15, 2.5, new_traj=1)
 

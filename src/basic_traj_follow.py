@@ -97,7 +97,7 @@ def follow(received_traj,grasp_t, dt):
     
     # Formulate trajectories - base
     base_list = received_traj[:,0:3]
-    # Move relative to map instead of hsrb_base_link
+    # base_list starts from 0,0,0.
     base_list = np.array([transform_base_traj(base_list[i], KDLFrame_base) for i in range(len(base_list))])
     # Index of x,y,yaw
     col_index = [0,1,5]
