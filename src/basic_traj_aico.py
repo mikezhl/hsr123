@@ -19,7 +19,7 @@ joint_limits = problem.get_scene().get_kinematic_tree().get_joint_limits()
 
 # Set start states
 scene.attach_object("SodaCan", "TargetObject")
-scene.attach_object_local("TargetObject", "Table", exo.KDLFrame([0.2,0.30,0.06]))#+0.04]))
+scene.attach_object_local("TargetObject", "Table", exo.KDLFrame([0.2,0.30,0.06]))
 scene.set_model_state_map({
     'arm_flex_joint': 0.0,
     'arm_lift_joint':0.0,

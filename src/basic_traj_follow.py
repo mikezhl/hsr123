@@ -62,7 +62,7 @@ def transform_base_traj(base_pose, KDLFrame_base):
     return KDLFrame_goal.get_translation_and_rpy()
 
 def follow(received_traj,grasp_t, dt):
-    '''Trajectory from AICO: [grasp_start, grasp_duration, time step of trajectory in seconds].
+    '''trajectory generated from AICO, time for grasping, time step of trajectory in seconds].
     '''
     print("The shape of the trajectory:",np.shape(received_traj))
     # Initialize

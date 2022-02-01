@@ -4,44 +4,13 @@ import sys
 import pyexotica as exo
 
 import rospy
-import actionlib
-import control_msgs.msg
-import controller_manager_msgs.srv
 from geometry_msgs.msg import PoseStamped
 import hsrb_interface
 
 import my_arm_client as arm
 import my_base_client as base
-
-def Simple_Action_Clients():
-    '''Start and return Simple Action Clients for: arm, base.
-    '''
-    print("Creating Simple Action Clients")
-    cli_arm = actionlib.SimpleActionClient(
-        '/hsrb/arm_trajectory_controller/follow_joint_trajectory',
-        control_msgs.msg.FollowJointTrajectoryAction)
-    cli_base = actionlib.SimpleActionClient(
-        '/hsrb/omni_base_controller/follow_joint_trajectory',
-        control_msgs.msg.FollowJointTrajectoryAction)
-    cli_arm.wait_for_server()
-    cli_base.wait_for_server()
-    
-    #Make sure the controller is running
-    rospy.wait_for_service('/hsrb/controller_manager/list_controllers')
-    list_controllers = (
-        rospy.ServiceProxy('/hsrb/controller_manager/list_controllers',
-                        controller_manager_msgs.srv.ListControllers))
-    running_arm = False
-    running_base = False
-    while (running_arm or running_base) is False:
-        rospy.sleep(0.1)
-        for c in list_controllers().controller:
-            if c.name == 'arm_trajectory_controller' and c.state == 'running':
-                running_arm = True
-            if c.name == 'omni_base_controller' and c.state == 'running':
-                running_base = True
-    print("Simple Action Clients created")
-    return cli_arm, cli_base
+from detect_traj_aico import detect_traj_aico
+from my_functions import my_Simple_Action_Clients
 
 def open_gripper(hsrb_gripper):
     # Approximate radians of open gripper
@@ -61,9 +30,14 @@ def transform_base_traj(base_pose, KDLFrame_base):
     KDLFrame_goal = KDLFrame_base * KDLFrame_traj
     return KDLFrame_goal.get_translation_and_rpy()
 
-def follow(received_traj,grasp_t, dt):
-    '''Trajectory from AICO: [grasp_start, grasp_duration, time step of trajectory in seconds].
+def follow(grasp_t, dt, *tag_pose, new_traj=0):
+    '''time for grasping, time step of trajectory in seconds, new_traj(0=use a generated traj;1=generate a new traj), pose of tag].
     '''
+    if new_traj:
+        received_traj = detect_traj_aico(debug=0,tag_pose=tag_pose[0],t_grasp_begin=grasp_t,doplot=0)
+    else:
+        # received_traj = np.load(sys.path[0]+'/trajectories/rob.npy', allow_pickle = False)
+        received_traj = np.load(sys.path[0]+'/trajectories/detect.npy', allow_pickle = False)
     print("The shape of the trajectory:",np.shape(received_traj))
     # Initialize
     try:
@@ -71,11 +45,11 @@ def follow(received_traj,grasp_t, dt):
         whole_body = robot.get('whole_body')
         hsrb_gripper = robot.get('gripper')
         open_gripper(hsrb_gripper)
-        whole_body.move_to_go()
+        # whole_body.move_to_go()
     except:
         raise Exception("Fail to initialize")
     # Create Simple Action Clients for arm and base
-    cli_arm, cli_base = Simple_Action_Clients()
+    cli_arm, cli_base = my_Simple_Action_Clients()
     
     # Find the current position
     base_posestamped = rospy.wait_for_message('/global_pose', PoseStamped)
@@ -129,9 +103,7 @@ def follow(received_traj,grasp_t, dt):
     exit()
 
 if __name__ == '__main__':
-    # Load the trajectory
-    # soln = np.load(sys.path[0]+'/trajectories/rob.npy', allow_pickle = False)
-    soln = np.load(sys.path[0]+'/trajectories/detect.npy', allow_pickle = False)
-    follow(soln, 4.5, 0.15)
-
+    # Set tag_pose if new_traj=1
+    # follow(4.5, 0.15, new_traj=0)
+    follow(4.5, 0.15, 2.5, new_traj=1)
 
