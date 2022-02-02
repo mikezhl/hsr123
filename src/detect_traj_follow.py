@@ -33,21 +33,24 @@ def transform_base_traj(base_list, KDLFrame_base):
 def follow(grasp_t, dt, *tag_pose, new_traj=0):
     '''time for grasping, time step of trajectory in seconds, new_traj(0=use a generated traj;1=generate a new traj), pose of tag].
     '''
-    if new_traj:
-        received_traj = detect_traj_aico(debug=0,tag_pose=tag_pose[0],t_grasp_begin=grasp_t,doplot=0)
-    else:
-        # received_traj = np.load(sys.path[0]+'/trajectories/rob.npy', allow_pickle = False)
-        received_traj = np.load(sys.path[0]+'/trajectories/detect.npy', allow_pickle = False)
-    print("The shape of the trajectory:",np.shape(received_traj))
     # Initialize
     try:
         robot = hsrb_interface.Robot()
         whole_body = robot.get('whole_body')
         hsrb_gripper = robot.get('gripper')
         open_gripper(hsrb_gripper)
-        # whole_body.move_to_go()
+        whole_body.move_to_go()
     except:
         raise Exception("Fail to initialize")
+    
+    # Get trajectory
+    if new_traj:
+        received_traj = detect_traj_aico(debug=0,tag_pose=tag_pose[0],t_grasp_begin=grasp_t,doplot=0)
+    else:
+        # received_traj = np.load(sys.path[0]+'/trajectories/rob.npy', allow_pickle = False)
+        received_traj = np.load(sys.path[0]+'/trajectories/detect.npy', allow_pickle = False)
+    print("The shape of the trajectory:",np.shape(received_traj))
+
     # Create Simple Action Clients for arm and base
     cli_arm, cli_base = my_Simple_Action_Clients()
     

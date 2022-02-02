@@ -10,5 +10,5 @@
   <param name="robot_description_semantic" textfile="$(find hsr123)/resources/hsrb.srdf" />
 
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hsr123)/config/rviz_test.rviz"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hsr123)/config/basic_rviztest.rviz"/>
 </launch>
