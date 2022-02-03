@@ -196,4 +196,13 @@
     <disable_collisions link1="head_rgbd_sensor_link" link2="torso_lift_link" reason="Never" />
     <disable_collisions link1="torso_lift_link" link2="wrist_flex_link" reason="Never" />
     <disable_collisions link1="wrist_flex_link" link2="wrist_roll_link" reason="Adjacent" />
+
+    <disable_collisions link1="base_link" link2="arm_flex_link" reason="Adjacent" />
+    <disable_collisions link1="base_link" link2="arm_roll_link" reason="Adjacent" />
+    <disable_collisions link1="head_tilt_link" link2="wrist_roll_link" reason="Adjacent" />
+    <disable_collisions link1="head_tilt_link" link2="hand_palm_link" reason="Adjacent" />
+    <disable_collisions link1="hand_r_distal_link" link2="hand_l_distal_link" reason="Adjacent" />
+    
+    <disable_collisions link1="TargetObject" link2="hand_l_distal_link" reason="Adjacent" />
+    <disable_collisions link1="TargetObject" link2="hand_r_distal_link" reason="Adjacent" />
 </robot>

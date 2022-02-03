@@ -3,6 +3,7 @@ import tf2_ros
 import numpy as np
 import signal
 from pyexotica.publish_trajectory import sig_int_handler
+import math
 
 def my_transform_can(rotation):
     import math
@@ -114,7 +115,50 @@ def my_Simple_Action_Clients():
     print("Simple Action Clients created")
     return cli_arm, cli_base
 
+def my_rrt_loop(solution):
+    from time import sleep
+    import pyexotica as exo
+    exo.Setup.init_ros()
+    config_name = '{hsr123}/resources/rrt.xml'
+    solver = exo.Setup.load_solver(config_name)
+    problem = solver.get_problem()
+    signal.signal(signal.SIGINT, sig_int_handler)
+    t = 0
+    while True:
+        problem.get_scene().update(solution[t], float(t) * 0.1)
+        # print("==========================================")
+        # print(exo.tools.get_colliding_links(scene, debug=True))
+        problem.get_scene().get_kinematic_tree().publish_frames()
+        sleep(0.1)
+        t = (t + 1) % len(solution)
 
+def find_turn(traj,max_change):
+    vec = np.diff(traj, axis=0)
+    deg=np.zeros(len(vec))
+    for i in range(len(vec)):
+        deg[i] = math.atan2(vec[i,0],vec[i,1])
+    change = list(np.diff(deg))
+    change.reverse()
+    n=0
+    for i in change:
+        if i>max_change:
+            return n
+        else:
+            n += 1
+    return n
+def find_close(traj,point,max_distance):
+    mylist = np.flip(traj,axis=0)
+    n=0
+    for i in mylist:
+        dis = ((i[0]-point[0])**2+(i[1]-point[1])**2)**0.5
+        if dis>max_distance:
+            return n
+        else:
+            n +=1
+def find_aico_point(traj1,traj2,max_change,point,max_distance):
+    one = min(find_turn(traj1,max_change),find_close(traj1,point,max_distance))
+    two = min(find_turn(np.flip(traj2,axis=0),max_change),find_close(np.flip(traj2,axis=0),point,max_distance))
+    return traj1[-one,:],traj2[two,:]
 
 
 

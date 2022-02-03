@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<PlannerDemoConfig>
+    <BayesianIKSolver Name="MySolver" MaxIterations="500" Damping="0.01" Debug="1" MaxBacktrackIterations="100"/>
+
+    <UnconstrainedEndPoseProblem Name="MyProblem">
+        <PlanningScene>
+            <Scene>
+                <JointGroup>arm_with_base</JointGroup>
+                <SetRobotDescriptionRosParams>1</SetRobotDescriptionRosParams>
+                <URDF>{hsr123}/resources/hsrb.urdf</URDF>
+                <SRDF>{hsr123}/resources/hsrb.srdf</SRDF>
+                <Links>
+                    <Link Name="TargetObject"/>
+                </Links>
+                <LoadScene>{hsr123}/resources/meeting_room_table.scene;{hsr123}/resources/soda_can.scene</LoadScene>
+            </Scene>
+        </PlanningScene>
+
+        <Maps>
+            <JointLimit Name="JointLimit" SafePercentage="0.0"/>
+
+            <EffPosition Name="EffPosition">
+                <EndEffector>
+                    <Frame Link="hand_palm_link" LinkOffset="0 0 0.04"/>
+                </EndEffector>
+            </EffPosition>
+
+            <EffAxisAlignment Name="EffAxisAlignment_after_grasp">
+                <EndEffector>
+                    <Frame Link="hand_palm_link" Direction="0 0 1" Axis="1 0 0"/>
+                </EndEffector>
+            </EffAxisAlignment>
+
+            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/>
+            <!-- <SumOfPenetrations Name="SumOfPenetrations" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/> -->
+
+            <!-- <EffPosition Name="BasePosition">
+                <EndEffector>
+                    <Frame Link="base_footprint" Base="TargetObject"/>
+                </EndEffector>
+            </EffPosition> -->
+
+        </Maps>
+
+        <Cost>
+            <!-- Penalise joint limit violation. Active during the entire task. -->
+            <Task Task="JointLimit" Rho="1e2"/>
+            <!-- Position for the end-effector during the grasping phase. Rho set in Python. -->
+            <Task Task="EffPosition" Rho="1e2"/>
+            <!-- Alignment of the end-effector during/after the grasphing phase. Rho set in Python. -->
+            <Task Task="EffAxisAlignment_after_grasp" Rho="1e3"/>
+            <!-- Collision avoidance -->
+            <Task Task="SCD" Rho="1e2"/>
+            <!-- <Task Task="SumOfPenetrations" Rho="1e2"/> -->
+            <!-- <Task Task="BasePosition" Rho="1e4"/> -->
+        </Cost>
+
+        <W>1 1 1 1 1 1 1 1</W>
+    </UnconstrainedEndPoseProblem>
+</PlannerDemoConfig>

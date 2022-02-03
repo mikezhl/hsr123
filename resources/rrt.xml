@@ -10,9 +10,6 @@
       <Scene>
         <JointGroup>base</JointGroup>
         <SetRobotDescriptionRosParams>1</SetRobotDescriptionRosParams>
-        <Links>
-            <Link Name="test" LinkOffset="2 2 2"/>
-        </Links>
         <URDF>{hsr123}/resources/hsrb.urdf</URDF>
         <SRDF>{hsr123}/resources/hsrb.srdf</SRDF>
         <LoadScene>{hsr123}/resources/meeting_room_table.scene;</LoadScene>
@@ -20,21 +17,17 @@
     </PlanningScene>
 
     <Maps>
-      <Distance Name="Distance">
-        <EndEffector>
-            <Frame Link="base_footprint" Base="test"/>
-        </EndEffector>
-      </Distance>
+      <CollisionCheck Name="Collision1" SelfCollision="0" SafeDistance="0.05"/>
+      <CollisionCheck Name="Collision2" SelfCollision="1"/>
     </Maps>
 
-    <Inequality>
-      <Task Task="Distance" Rho="-1" Goal="0.2"/>
-    </Inequality>
+    <Equality>
+      <Task Task="Collision1"/>
+      <Task Task="Collision2"/>
+    </Equality>
 
-    <Goal>1 1 1</Goal>
-
-    <FloatingBaseLowerLimits>-5 -5 0</FloatingBaseLowerLimits>
-    <FloatingBaseUpperLimits> 5  5 3.1415</FloatingBaseUpperLimits>
+    <FloatingBaseLowerLimits>-5 -5 -1.5708</FloatingBaseLowerLimits>
+    <FloatingBaseUpperLimits> 5  5 1.5708</FloatingBaseUpperLimits>
   </SamplingProblem>
 
 </PlannerDemoConfig>
