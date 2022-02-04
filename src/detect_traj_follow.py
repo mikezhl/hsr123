@@ -30,7 +30,7 @@ def transform_base_traj(base_list, KDLFrame_base):
     KDLFrame_goal = KDLFrame_base * KDLFrame_traj
     return KDLFrame_traj.get_translation_and_rpy()
 
-def follow(grasp_t, dt, *tag_pose, new_traj=0):
+def detect_traj_follow(grasp_t, dt, *tag_pose, new_traj=0):
     '''time for grasping, time step of trajectory in seconds, new_traj(0=use a generated traj;1=generate a new traj), pose of tag].
     '''
     # Initialize
@@ -107,6 +107,6 @@ def follow(grasp_t, dt, *tag_pose, new_traj=0):
 
 if __name__ == '__main__':
     # Set tag_pose if new_traj=1
-    follow(4.5, 0.15, new_traj=0)
-    # follow(4.5, 0.15, 2.5, new_traj=1)
+    detect_traj_follow(4.5, 0.15, new_traj=0)
+    # detect_traj_follow(4.5, 0.15, 2.5, new_traj=1)
 

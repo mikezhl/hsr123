@@ -119,7 +119,7 @@ def my_rrt_loop(solution):
     from time import sleep
     import pyexotica as exo
     exo.Setup.init_ros()
-    config_name = '{hsr123}/resources/rrt.xml'
+    config_name = '{hsr123}/resources/pickup/rrt.xml'
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     signal.signal(signal.SIGINT, sig_int_handler)

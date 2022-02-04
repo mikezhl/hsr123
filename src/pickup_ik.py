@@ -8,10 +8,10 @@ from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
 import matplotlib.pyplot as plt
 
-def ik(can_position,debug=1):
+def pickup_ik(can_position,debug=1):
     # Init
     exo.Setup.init_ros()
-    config_name = '{hsr123}/resources/ik.xml'
+    config_name = '{hsr123}/resources/pickup/ik.xml'
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
@@ -46,4 +46,4 @@ def ik(can_position,debug=1):
 
 
 if __name__ == '__main__':
-    ik([0.8856, -0.3937, 0.7941],debug=1)
+    pickup_ik([0.8856, -0.3937, 0.7941],debug=1)

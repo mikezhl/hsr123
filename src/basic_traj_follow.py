@@ -61,7 +61,7 @@ def transform_base_traj(base_pose, KDLFrame_base):
     KDLFrame_goal = KDLFrame_base * KDLFrame_traj
     return KDLFrame_goal.get_translation_and_rpy()
 
-def follow(received_traj,grasp_t, dt):
+def basic_traj_follow(received_traj,grasp_t, dt):
     '''trajectory generated from AICO, time for grasping, time step of trajectory in seconds].
     '''
     print("The shape of the trajectory:",np.shape(received_traj))
@@ -132,6 +132,6 @@ if __name__ == '__main__':
     # Load the trajectory
     # soln = np.load(sys.path[0]+'/trajectories/rob.npy', allow_pickle = False)
     soln = np.load(sys.path[0]+'/trajectories/basic.npy', allow_pickle = False)
-    follow(soln, 4.5, 0.15)
+    basic_traj_follow(soln, 4.5, 0.15)
 
 

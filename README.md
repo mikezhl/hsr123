@@ -32,5 +32,12 @@ sudo apt install ros-noetic-exotica-examples
 
 ## Instructions - Detection
 #### Description
-- Pick up a soda can in a ramdon place without stopping.
-#### To be continued
+- Pick up a soda can in a fixed place with apriltag. A modified version of the basic one above, remove the hardcoded part.
+#### Run!
+- Srat the gazebo simulation, `roslaunch hsr123 detect.launch`
+- Choice 1: Run `detect_traj_follow(4.5, 0.15, 2.5, new_traj=1)` with `hsr123/src/detect_traj_follow.py` to generate and run the new trajectory.
+- Choice 2: Run `hsr123/src/detect_traj_aico.py` first to generate the trajectory, and run `detect_traj_follow(4.5, 0.15, new_traj=0)` with `hsr123/src/detect_traj_follow.py`to run the trajectory
+
+## Instructions - Pick Up
+### Description
+- Pick up a soda can in a random place with apriltag from a random start place. Using IK, AICO and RRT solver.

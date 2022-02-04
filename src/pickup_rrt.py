@@ -8,12 +8,12 @@ import numpy as np
 import pyexotica as exo
 from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
+import matplotlib.pyplot as plt
 
-
-def rrt(start, goal, debug=1,doplot=0):
+def pickup_rrt(start, goal, debug=1,doplot=0):
     # Init
     exo.Setup.init_ros()
-    config_name = '{hsr123}/resources/rrt.xml'
+    config_name = '{hsr123}/resources/pickup/rrt.xml'
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
@@ -30,7 +30,9 @@ def rrt(start, goal, debug=1,doplot=0):
     if debug:
         np.save(sys.path[0]+"/trajectories/"+"rrt",solution)
         signal.signal(signal.SIGINT, sig_int_handler)
-        print(solution)
+        print(len(solution),solution)
+        plt.plot(solution[:,0],solution[:,1],'xr')
+        plt.show()
         t = 0
         while True:
             problem.get_scene().update(solution[t], float(t) * 0.1)
@@ -44,4 +46,4 @@ def rrt(start, goal, debug=1,doplot=0):
 
 
 if __name__ == '__main__':
-    rrt([-1,-2,0],[ 0.2631, -0.1206, -0.5808],debug=1,doplot=0)
+    pickup_rrt([-1,-2,0],[ 0.2631, -0.1206, -0.5808],debug=1,doplot=0)
