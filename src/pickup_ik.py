@@ -7,7 +7,7 @@ import pyexotica as exo
 from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
 import matplotlib.pyplot as plt
-
+from my_functions import my_ik_cost
 def pickup_ik(can_position,debug=1):
     # Init
     exo.Setup.init_ros()
@@ -20,6 +20,9 @@ def pickup_ik(can_position,debug=1):
     scene.attach_object("SodaCan", "TargetObject")
     scene.attach_object_local("TargetObject", "", exo.KDLFrame(can_position))
     scene.set_model_state_map({
+            # 'world_joint/x': 0.8856,
+            # 'world_joint/y': -0.3937,
+            # 'world_joint/theta': 0,
             'hand_l_spring_proximal_joint': 0.9,
             'hand_motor_joint': 0.81,
             'hand_r_spring_proximal_joint': 0.9,})
@@ -31,7 +34,10 @@ def pickup_ik(can_position,debug=1):
 
     # Solve
     solution = solver.solve()
-    print(problem.cost.Phi)
+    print(my_ik_cost(problem))
+
+
+
     # Visualization in rviz
     if debug:
         np.save(sys.path[0]+"/trajectories/"+"ik",solution)

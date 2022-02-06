@@ -4,6 +4,7 @@ import numpy as np
 import signal
 from pyexotica.publish_trajectory import sig_int_handler
 import math
+import matplotlib.pyplot as plt
 
 def my_transform_can(rotation):
     import math
@@ -29,7 +30,6 @@ def my_transform_can(rotation):
     return [round(num, 4) for num in [x/n+x_offset, y/n-y_offset, z/n]]
 
 def my_plot_analysis(problem,solution,scene):
-    import matplotlib.pyplot as plt
     '''Plot some fig about the solver for analysis'''
     # Show convergence plot
     fig = plt.figure(1)
@@ -158,8 +158,38 @@ def find_close(traj,point,max_distance):
 def find_aico_point(traj1,traj2,max_change,point,max_distance):
     one = min(find_turn(traj1,max_change),find_close(traj1,point,max_distance))
     two = min(find_turn(np.flip(traj2,axis=0),max_change),find_close(np.flip(traj2,axis=0),point,max_distance))
-    return traj1[-one,:],traj2[two,:]
+    return traj1[0:-one,:],traj2[two:-1,:]
 
+def my_ik_cost(problem):
+    problemcost = problem.cost
+    ydiff = problemcost.ydiff
+    cost_dict = {}
+    for cost_task in problemcost.tasks:
+        taskydiff = ydiff[cost_task.startJ:cost_task.startJ+cost_task.lengthJ]
+        rho = problem.cost.S[cost_task.startJ:cost_task.startJ+cost_task.lengthJ,cost_task.startJ:cost_task.startJ+cost_task.lengthJ]
+        cost = np.dot(np.dot(taskydiff, rho), taskydiff)
+        cost_dict[cost_task.name] = cost
+    return cost_dict
 
-
+def my_bezier(can_position,pathlist,num,debug=1):
+    P0, P1, P2 = np.array([pathlist[0][0:2],can_position[0:2],pathlist[1][0:2]])
+    P = lambda t: (1 - t)**2 * P0 + 2 * t * (1 - t) * P1 + t**2 * P2
+    points = np.array([P(t) for t in np.linspace(0, 1, num)])
+    x, y = points[:, 0], points[:, 1]
+    if debug:
+        plt.plot(x, y, 'b-')
+        plt.plot(*P0, 'r.')
+        plt.plot(*P1, 'r.')
+        plt.plot(*P2, 'r.')
+        plt.show()
+    else:
+        return x,y
+def my_set_traj(x,y,path):
+    length = len(x)
+    content = '''123
+    {} 4'''.format(length)
+    for i in range(len(x)):
+        content += "\n {} {} {} {}".format(10/length*i,round(x[i],4),round(y[i],4),0)
+    with open(path, "w") as f:
+        f.write(content)
 
