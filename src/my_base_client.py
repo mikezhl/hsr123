@@ -52,31 +52,39 @@ def load_base_goal(base_list,cli_base,dt):
         cli_base.send_goal(goal_base,done_cb=done_cb_base, active_cb=active_cb_base, feedback_cb=feedback_cb_base)
         return
 
-def done_cb_base_rrt(state, result):
+
+
+def done_cb_base_pickup(state, result):
     print('[DONE_BASE] the state is: '+str(state))
     print('[DONE_BASE] the result is: '+str(result))
     if state == 3:
         print('[BASE FINISHED]')
-        rospy.signal_shutdown('Finished')
+        n = int(rospy.get_param("pickup_status"))+1
+        rospy.set_param('pickup_status', n)
         return
     else:
         print('Issue arose, shutting down')
-def load_base_goal_rrt(base_list,cli_base,vel_limit):
+def prepare_aico(base_list,dt):
+    base_vel = calculate_velocity(base_list, dt)
+    p_base_list = [base_point(base_list[i,:],base_vel[i,:]) for i in range(len(base_list))]
+    return p_base_list
+def prepare_rrt(base_list,vel_limit):
+    distance = np.diff(base_list, axis = 0)
+    distance_abs = (distance[:,0]**2+distance[:,1]**2)**0.5
+    dt_list = distance_abs/vel_limit
+    time_list = np.cumsum(dt_list)
+    base_list = np.c_[base_list, np.concatenate(([0],time_list))]
+    base_vel  = [(base_list[i+1,0:3]-base_list[i,0:3])/(base_list[i+1,3]-base_list[i,3]) for i in range(len(base_list)-1)]
+    base_list = base_list[1::]
+    p_base_list = [base_point(base_list[i,:],base_vel[i]) for i in range(len(base_list))]
+    return p_base_list
+def load_base_goal_pickup(p_base_list,cli_base):
     # base_list, list of base trajectories with form [x,y,theta]
-    if base_list.any():
-        distance = np.diff(base_list, axis = 0)
-        distance_abs = (distance[:,0]**2+distance[:,1]**2)**0.5
-        dt_list = distance_abs/vel_limit
-        time_list = np.cumsum(dt_list)
-        base_list = np.c_[base_list, np.concatenate(([0],time_list))]
-        base_vel  = [(base_list[i+1,0:3]-base_list[i,0:3])/(base_list[i+1,3]-base_list[i,3]) for i in range(len(base_list)-1)]
-        base_list = base_list[1::]
-        goal_base = control_msgs.msg.FollowJointTrajectoryGoal()
-        traj_base = trajectory_msgs.msg.JointTrajectory()
-        traj_base.header.frame_id = "base_link"
-        traj_base.joint_names = ["odom_x", "odom_y", "odom_t"]
-        p_base_list = [base_point(base_list[i,:],base_vel[i]) for i in range(len(base_list))]
-        traj_base.points = p_base_list
-        goal_base.trajectory = traj_base
-        cli_base.send_goal(goal_base,done_cb=done_cb_base_rrt, active_cb=active_cb_base, feedback_cb=feedback_cb_base)
-        return
+    goal_base = control_msgs.msg.FollowJointTrajectoryGoal()
+    traj_base = trajectory_msgs.msg.JointTrajectory()
+    traj_base.header.frame_id = "base_link"
+    traj_base.joint_names = ["odom_x", "odom_y", "odom_t"]
+    traj_base.points = p_base_list
+    goal_base.trajectory = traj_base
+    cli_base.send_goal(goal_base,done_cb=done_cb_base_pickup, active_cb=active_cb_base, feedback_cb=feedback_cb_base)
+    return

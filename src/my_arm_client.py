@@ -51,3 +51,31 @@ def load_arm_goal(arm_list,cli_arm,dt):
         goal_arm.trajectory = traj_arm
         cli_arm.send_goal(goal_arm,done_cb=done_cb_arm, active_cb=active_cb_arm, feedback_cb=feedback_cb_arm)
         return
+
+
+
+def done_cb_arm_pickup(state, result):
+    print('[DONE_ARM] the state is: '+str(state))
+    print('[DONE_ARM] the result is: '+str(result))
+    if state == 3:
+        print('[ARM FINISHED]')
+        n = int(rospy.get_param("pickup_status"))+1
+        rospy.set_param('pickup_status', n)
+        return
+    else:
+        print('Issue arose, shutting down')
+def prepare_aico(arm_list,dt):
+    arm_vel = calculate_velocity(arm_list,dt)
+    p_arm_list = [arm_point(arm_list[i,:], arm_vel[i,:]) for i in range(len(arm_list))]
+    return p_arm_list
+def load_arm_goal_pickup(p_arm_list,cli_arm):
+    # arm_list: list of arm trajectories with form [joint angle x5, time from start]
+    rospy.set_param('status_check', 0)
+    goal_arm = control_msgs.msg.FollowJointTrajectoryGoal()
+    traj_arm = trajectory_msgs.msg.JointTrajectory()
+    traj_arm.joint_names = ["arm_lift_joint", "arm_flex_joint",
+                "arm_roll_joint", "wrist_flex_joint", "wrist_roll_joint"]
+    traj_arm.points = p_arm_list
+    goal_arm.trajectory = traj_arm
+    cli_arm.send_goal(goal_arm,done_cb=done_cb_arm_pickup, active_cb=active_cb_arm, feedback_cb=feedback_cb_arm)
+    return

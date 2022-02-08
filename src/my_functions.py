@@ -214,3 +214,30 @@ def my_set_traj(x,y,theta,path):
     with open(path, "w") as f:
         f.write(content)
 
+def my_traj_transform(base_list, KDLFrame_startbase):
+    '''Takes input of base_pose which is an array [x,y,rot] and a KDLFrame.
+        returns [x,y,z,r,p,yaw]
+    '''
+    import pyexotica as exo
+    KDLFrame_traj = exo.KDLFrame(np.concatenate((base_list[0:2],[0,0,0],[base_list[2]])))
+    KDLFrame_goal = KDLFrame_startbase.inverse() * KDLFrame_traj
+    base_list = KDLFrame_goal.get_translation_and_rpy()
+    col_index = [0,1,5]
+    return base_list[col_index]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

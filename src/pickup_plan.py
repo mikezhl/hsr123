@@ -7,23 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import math
-def open_gripper(hsrb_gripper):
-    # Approximate radians of open gripper
-    _GRASP_OPEN = 0.8
-    hsrb_gripper.command(_GRASP_OPEN)
-
-def close_gripper(hsrb_gripper):
-    # Grasp force[N]
-    _GRASP_FORCE=0.2
-    hsrb_gripper.apply_force(_GRASP_FORCE, delicate = True)
-
-def transform_base_traj(base_list, KDLFrame_base):
-    '''Takes input of base_pose which is an array [x,y,rot] and a KDLFrame.
-        returns [x,y,z,r,p,yaw]
-    '''
-    KDLFrame_traj = exo.KDLFrame(np.concatenate((base_list[0:2],[0,0,0],[base_list[2]])))
-    KDLFrame_goal = KDLFrame_base * KDLFrame_traj
-    return KDLFrame_traj.get_translation_and_rpy()
 
 # Init
 debug=1
