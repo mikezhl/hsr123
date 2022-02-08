@@ -4,13 +4,12 @@ import control_msgs.msg
 import rospy
 import trajectory_msgs.msg
 
+# Three callback functions for the arm action client
 def active_cb_arm():
     print('[ACTIVE_ARM] arm goal active')
-
 def feedback_cb_arm(feedback):
     return
     print('[FEEDBACK] :' + str(feedback))
-
 def done_cb_arm(state, result):
     print('[DONE_ARM] the state is: '+str(state))
     print('[DONE_ARM] the result is: '+str(result))
@@ -23,21 +22,21 @@ def done_cb_arm(state, result):
         return
     else:
         print('Issue arose, shutting down')
-
+# Generate TrajectoryPoint for arm action client
 def arm_point(current_arm_traj, current_arm_velocity):
     p_arm = trajectory_msgs.msg.JointTrajectoryPoint()
     p_arm.velocities = current_arm_velocity[0:5]
     p_arm.positions = current_arm_traj[0:5]
     p_arm.time_from_start = rospy.Time(current_arm_traj[5])
     return p_arm
-
+# Calculate velocity for arm action client
 def calculate_velocity(pos_array, dt):
     pos_array = np.append(pos_array, [pos_array[-1]], axis=0)
     vel_array = np.diff(pos_array, axis = 0)/dt
     return vel_array
-
+# Constuct the TrajectoryPoint and send to the arm action client
 def load_arm_goal(arm_list,cli_arm,dt):
-    # arm_list: list of arm trajectories with form [joint angle x5, time from start]
+    '''arm_list in the form of [joint angle x5, time from start]'''
     rospy.set_param('status_check', 0)
     if arm_list.any():
         arm_vel = calculate_velocity(arm_list,dt)
@@ -53,10 +52,10 @@ def load_arm_goal(arm_list,cli_arm,dt):
         return
 
 
-
+# Callback functions for the arm action client used in pickup
 def done_cb_arm_pickup(state, result):
-    print('[DONE_ARM] the state is: '+str(state))
-    print('[DONE_ARM] the result is: '+str(result))
+    # print('[DONE_ARM] the state is: '+str(state))
+    # print('[DONE_ARM] the result is: '+str(result))
     if state == 3:
         print('[ARM FINISHED]')
         n = int(rospy.get_param("pickup_status"))+1
@@ -64,12 +63,14 @@ def done_cb_arm_pickup(state, result):
         return
     else:
         print('Issue arose, shutting down')
+# Generate TrajectoryPoint list for arm action client used in pickup
 def prepare_aico(arm_list,dt):
+    '''arm_list in the form of [joint angle x5, time from start]'''
     arm_vel = calculate_velocity(arm_list,dt)
     p_arm_list = [arm_point(arm_list[i,:], arm_vel[i,:]) for i in range(len(arm_list))]
     return p_arm_list
+# Send the TrajectoryPoint list to the arm action client used in pickup
 def load_arm_goal_pickup(p_arm_list,cli_arm):
-    # arm_list: list of arm trajectories with form [joint angle x5, time from start]
     rospy.set_param('status_check', 0)
     goal_arm = control_msgs.msg.FollowJointTrajectoryGoal()
     traj_arm = trajectory_msgs.msg.JointTrajectory()
