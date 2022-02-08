@@ -51,3 +51,24 @@ def load_base_goal(base_list,cli_base,dt):
         goal_base.trajectory = traj_base
         cli_base.send_goal(goal_base,done_cb=done_cb_base, active_cb=active_cb_base, feedback_cb=feedback_cb_base)
         return
+
+def load_base_goal_rrt(base_list,cli_base,dt,vel_limit):
+    # base_list, list of base trajectories with form [x,y,theta]
+    if base_list.any():
+        rospy.set_param('status_check', 0)
+        distance = np.diff(base_list, axis = 0)
+        distance_abs = (distance[:,0]**2+distance[:,1]**2)**0.5
+        dt_list = distance_abs/vel_limit
+        time_list = np.cumsum(dt_list)
+        base_list = base_list[1::]
+        base_list = np.c_[base_list, time_list]
+        base_vel = calculate_velocity(base_list, dt)
+        goal_base = control_msgs.msg.FollowJointTrajectoryGoal()
+        traj_base = trajectory_msgs.msg.JointTrajectory()
+        traj_base.header.frame_id = "base_link"
+        traj_base.joint_names = ["odom_x", "odom_y", "odom_t"]
+        p_base_list = [base_point(base_list[i,:],base_vel[i,:]) for i in range(len(base_list))]
+        traj_base.points = p_base_list
+        goal_base.trajectory = traj_base
+        cli_base.send_goal(goal_base,done_cb=done_cb_base, active_cb=active_cb_base, feedback_cb=feedback_cb_base)
+        return

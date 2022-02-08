@@ -28,7 +28,7 @@ def transform_base_traj(base_list, KDLFrame_base):
     '''
     KDLFrame_traj = exo.KDLFrame(np.concatenate((base_list[0:2],[0,0,0],[base_list[2]])))
     KDLFrame_goal = KDLFrame_base * KDLFrame_traj
-    return KDLFrame_traj.get_translation_and_rpy()
+    return KDLFrame_goal.get_translation_and_rpy()
 
 def detect_traj_follow(grasp_t, dt, *tag_pose, new_traj=0):
     '''time for grasping, time step of trajectory in seconds, new_traj(0=use a generated traj;1=generate a new traj), pose of tag].

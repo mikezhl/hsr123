@@ -59,7 +59,7 @@
                 </EndEffector>
             </PointToPlane>
             
-            <JointPose Name="FinalPose" JointMap="2 3 4 5 6 7" JointRef="0 0 0 -1.57 -1.57 0"/>
+            <JointPose Name="FinalPose" JointMap="0 1 2 3 4 5 6 7" JointRef="0 0 0 0 0 -1.57 -1.57 0"/>
 
             <SmoothCollisionDistance Name="SCD" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/>
             <!-- <SumOfPenetrations Name="SumOfPenetrations" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/> -->
@@ -69,7 +69,7 @@
             <!-- Penalise joint limit violation. Active during the entire task. -->
             <Task Task="JointLimit" Rho="1e4"/>
             <!-- Follow the given base trajectory in XY -->
-            <Task Task="BasePosition" Rho="1e2"/>
+            <Task Task="BasePosition" Rho="1e3"/>
             <!-- Position for the end-effector during the grasping phase. Rho set in Python. -->
             <Task Task="EffPosition" Rho="0"/>
             <!-- Alignment of the end-effector during/after the grasphing phase. Rho set in Python. -->
@@ -80,7 +80,7 @@
             <!-- Achieve a zero-rotation at the end of the trajectory. Rho set in Python. -->
             <Task Task="FinalPose" Rho="0"/>
             <!-- Collision avoidance -->
-            <!--<Task Task="SCD" Rho="1e1"/> -->
+            <Task Task="SCD" Rho="0"/>
             <!-- <Task Task="SumOfPenetrations" Rho="1e2"/> -->
         </Cost>
 

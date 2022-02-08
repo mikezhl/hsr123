@@ -115,19 +115,38 @@ def my_Simple_Action_Clients():
     print("Simple Action Clients created")
     return cli_arm, cli_base
 
-def my_rrt_loop(solution):
+def my_pickup(solution,can_position):
     from time import sleep
     import pyexotica as exo
     exo.Setup.init_ros()
-    config_name = '{hsr123}/resources/pickup/rrt.xml'
+    config_name = '{hsr123}/resources/pickup/aico.xml'
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
+    scene = problem.get_scene()
+    scene.attach_object("SodaCan", "TargetObject")
+    scene.attach_object_local("TargetObject", "", exo.KDLFrame(can_position))
+    scene.set_model_state_map({
+        'arm_flex_joint': 0.0,
+        'arm_lift_joint':0.0,
+        'arm_roll_joint': -np.pi/2,
+        'base_l_drive_wheel_joint':0.0,
+        'base_r_drive_wheel_joint': 0.0,
+        'base_roll_joint': 0.0,
+        'hand_l_spring_proximal_joint': 0.9,
+        'hand_motor_joint': 0.81,
+        'hand_r_spring_proximal_joint': 0.9,
+        'head_pan_joint': 0.0,
+        'head_tilt_joint': 0.0,
+        'wrist_flex_joint': -np.pi/2,
+        'wrist_roll_joint': 0.0,})
+    problem.start_state = scene.get_model_state()
     signal.signal(signal.SIGINT, sig_int_handler)
     t = 0
     while True:
         problem.get_scene().update(solution[t], float(t) * 0.1)
         # print("==========================================")
         # print(exo.tools.get_colliding_links(scene, debug=True))
+        scene.set_model_state_map({'torso_lift_joint': 0.5 * solution[t,3]})
         problem.get_scene().get_kinematic_tree().publish_frames()
         sleep(0.1)
         t = (t + 1) % len(solution)
@@ -141,7 +160,7 @@ def find_turn(traj,max_change):
     change.reverse()
     n=0
     for i in change:
-        if i>max_change:
+        if abs(i)>max_change:
             return n
         else:
             n += 1
@@ -176,6 +195,7 @@ def my_bezier(can_position,pathlist,num,debug=1):
     P = lambda t: (1 - t)**2 * P0 + 2 * t * (1 - t) * P1 + t**2 * P2
     points = np.array([P(t) for t in np.linspace(0, 1, num)])
     x, y = points[:, 0], points[:, 1]
+    theta = np.linspace(pathlist[0][2],pathlist[1][2],num)
     if debug:
         plt.plot(x, y, 'b-')
         plt.plot(*P0, 'r.')
@@ -183,13 +203,14 @@ def my_bezier(can_position,pathlist,num,debug=1):
         plt.plot(*P2, 'r.')
         plt.show()
     else:
-        return x,y
-def my_set_traj(x,y,path):
+        return x,y,theta
+def my_set_traj(x,y,theta,path):
     length = len(x)
     content = '''123
     {} 4'''.format(length)
+    length = length-1
     for i in range(len(x)):
-        content += "\n {} {} {} {}".format(10/length*i,round(x[i],4),round(y[i],4),0)
+        content += "\n {} {} {} {}".format(10/length*i,round(x[i],4),round(y[i],4),round(theta[i],4))
     with open(path, "w") as f:
         f.write(content)
 

@@ -10,7 +10,7 @@ from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
 
 from my_functions import my_transform_can, my_plot_analysis, my_bezier,my_set_traj
-def detect_traj_aico(can_position,pathlist,debug=1,doplot=0):
+def pickup_aico(can_position,debug=1,doplot=0):
     # Init
     exo.Setup.init_ros()
     t_grasp_begin=4
@@ -18,29 +18,31 @@ def detect_traj_aico(can_position,pathlist,debug=1,doplot=0):
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
+    BaseTarget_split = scene.get_trajectory("BaseTarget").split("\n")
+    start = BaseTarget_split[2].split()
+    end = BaseTarget_split[-1].split()
     joint_limits = problem.get_scene().get_kinematic_tree().get_joint_limits()
 
     # Set start states
     scene.attach_object("SodaCan", "TargetObject")
-    if debug:
-        scene.attach_object_local("TargetObject", "", exo.KDLFrame(can_position))
-        scene.set_model_state_map({
-            'world_joint/x': pathlist[0][0],
-            'world_joint/y': pathlist[0][1],
-            'world_joint/theta': pathlist[0][2],
-            'arm_flex_joint': 0.0,
-            'arm_lift_joint':0.0,
-            'arm_roll_joint': -np.pi/2,
-            'base_l_drive_wheel_joint':0.0,
-            'base_r_drive_wheel_joint': 0.0,
-            'base_roll_joint': 0.0,
-            'hand_l_spring_proximal_joint': 0.9,
-            'hand_motor_joint': 0.81,
-            'hand_r_spring_proximal_joint': 0.9,
-            'head_pan_joint': 0.0,
-            'head_tilt_joint': 0.0,
-            'wrist_flex_joint': -np.pi/2,
-            'wrist_roll_joint': 0.0,})
+    scene.attach_object_local("TargetObject", "", exo.KDLFrame(can_position))
+    scene.set_model_state_map({
+        'world_joint/x': float(start[1]),
+        'world_joint/y': float(start[2]),
+        'world_joint/theta': float(start[3]),
+        'arm_flex_joint': 0.0,
+        'arm_lift_joint':0.0,
+        'arm_roll_joint': -np.pi/2,
+        'base_l_drive_wheel_joint':0.0,
+        'base_r_drive_wheel_joint': 0.0,
+        'base_roll_joint': 0.0,
+        'hand_l_spring_proximal_joint': 0.9,
+        'hand_motor_joint': 0.81,
+        'hand_r_spring_proximal_joint': 0.9,
+        'head_pan_joint': 0.0,
+        'head_tilt_joint': 0.0,
+        'wrist_flex_joint': -np.pi/2,
+        'wrist_roll_joint': 0.0,})
     problem.start_state = scene.get_model_state()
     q_start = problem.apply_start_state(True)
     if np.any(q_start < joint_limits[:,0]) or np.any(q_start > joint_limits[:,1]):
@@ -58,6 +60,7 @@ def detect_traj_aico(can_position,pathlist,debug=1,doplot=0):
     T_grasp_begin = int(t_grasp_begin / problem.tau)
     T_grasp_end = int((t_grasp_begin + t_grasp_duration) / problem.tau)
     problem.get_task_maps()["EffAxisAlignment_before_grasp"].set_direction("hand_palm_link",np.append(gripper_orientation,[0.0]))
+    problem.get_task_maps()["FinalPose"].joint_ref = np.array([float(end[1]),float(end[2]),float(end[3]),  0.  ,  0.  , -1.57, -1.57,  0.  ])
     for t in range(T_grasp_begin, T_grasp_end):
         problem.set_rho('EffPosition', 1e3, t)
         problem.set_goal('EffPosition', location_can[:3], t)
@@ -67,7 +70,7 @@ def detect_traj_aico(can_position,pathlist,debug=1,doplot=0):
         problem.set_rho('EffAxisAlignment_after_grasp', 1e3, t)
     problem.set_rho('LiftOffTable', 1e2, T_grasp_begin - 20)
     problem.set_rho('LiftOffTable', 1e2, T_grasp_end + 20)
-    # problem.set_rho('FinalPose', 1e3, -1)
+    problem.set_rho('FinalPose', 1e3, -1)
 
     # Solve
     init_pose = np.zeros((problem.T,problem.N))
@@ -102,5 +105,4 @@ def detect_traj_aico(can_position,pathlist,debug=1,doplot=0):
 
 
 if __name__ == '__main__':
-    pathlist=[[0.2196,0.3267,-0.6012],[1.264,0.5568,-0.5185]]
-    detect_traj_aico([0.8856, -0.3937, 0.7941],pathlist,debug=1,doplot=1)
+    pickup_aico([0.8856, -0.3937, 0.7941],debug=1,doplot=1)
