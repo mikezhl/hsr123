@@ -39,7 +39,7 @@ def detect_traj_follow(grasp_t, dt, *tag_pose, new_traj=0):
         whole_body = robot.get('whole_body')
         hsrb_gripper = robot.get('gripper')
         open_gripper(hsrb_gripper)
-        whole_body.move_to_go()
+        # whole_body.move_to_go()
     except:
         raise Exception("Fail to initialize")
     
