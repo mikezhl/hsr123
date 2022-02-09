@@ -184,13 +184,15 @@ def find_aico_point(traj1,traj2,max_change,point,max_distance):
     two = min(find_turn(np.flip(traj2,axis=0),max_change),find_close(np.flip(traj2,axis=0),point,max_distance))
     return traj1[0:-one,:],traj2[two:-1,:]
 
+
 def my_ik_cost(problem):
-    '''Return the cost in dictionary for ik solver'''
-    problemcost = problem.cost
-    ydiff = problemcost.ydiff
+    '''Return the cost in dictionary'''
+    ydiff = problem.cost.ydiff
     cost_dict = {}
-    for cost_task in problemcost.tasks:
+    for cost_task in problem.cost.tasks:
+        # can also use problem.cost.get_task_error(task_name)
         taskydiff = ydiff[cost_task.startJ:cost_task.startJ+cost_task.lengthJ]
+        # can also use problem.cost.get_S(task_name)
         rho = problem.cost.S[cost_task.startJ:cost_task.startJ+cost_task.lengthJ,cost_task.startJ:cost_task.startJ+cost_task.lengthJ]
         cost = np.dot(np.dot(taskydiff, rho), taskydiff)
         cost_dict[cost_task.name] = cost
