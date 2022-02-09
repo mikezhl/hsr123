@@ -44,10 +44,10 @@
             </EffPosition> -->
 
             <!-- Regularise y to 0, away from the table -->
-            <JointPose Name="BasePosition">
+            <!-- <JointPose Name="BasePosition">
                 <JointMap>1</JointMap>
                 <JointRef>0</JointRef>
-            </JointPose>
+            </JointPose> -->
 
         </Maps>
 
@@ -61,7 +61,7 @@
             <!-- Collision avoidance -->
             <Task Task="SCD" Rho="1"/>
             <!-- <Task Task="SumOfPenetrations" Rho="1e2"/> -->
-            <Task Task="BasePosition" Rho="1e1"/>
+            <!-- <Task Task="BasePosition" Rho="1e1"/> -->
         </Cost>
 
         <!-- <W>1 1 1 1 1 1 1 1</W> -->
