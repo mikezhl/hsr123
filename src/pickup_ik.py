@@ -8,6 +8,8 @@ from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
 import matplotlib.pyplot as plt
 from my_functions import my_ik_cost
+
+
 def pickup_ik(can_position,debug=1):
     # Init
     exo.Setup.init_ros()
@@ -26,7 +28,11 @@ def pickup_ik(can_position,debug=1):
             'hand_l_spring_proximal_joint': 0.9,
             'hand_motor_joint': 0.81,
             'hand_r_spring_proximal_joint': 0.9,})
-    problem.start_state = scene.get_model_state()
+    start_state = scene.get_model_state()
+    # Initialise away from the table so it's not in collision by default
+    start_state[0] = 5.
+    start_state[1] = 5.
+    problem.start_state = start_state
     
     # Set the Task map
     location_can = scene.fk('SodaCan').get_translation_and_rpy()
