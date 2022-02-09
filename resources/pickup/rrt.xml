@@ -26,8 +26,8 @@
       <Task Task="Collision2"/>
     </Equality>
 
-    <FloatingBaseLowerLimits>-5 -5 -1.5708</FloatingBaseLowerLimits>
-    <FloatingBaseUpperLimits> 5  5 1.5708</FloatingBaseUpperLimits>
+    <FloatingBaseLowerLimits>-5 -5 -3.14</FloatingBaseLowerLimits>
+    <FloatingBaseUpperLimits> 5  5 3.14</FloatingBaseUpperLimits>
   </SamplingProblem>
 
 </PlannerDemoConfig>

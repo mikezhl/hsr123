@@ -20,9 +20,12 @@ def pickup_ik(can_position,debug=1):
     scene.attach_object("SodaCan", "TargetObject")
     scene.attach_object_local("TargetObject", "", exo.KDLFrame(can_position))
     scene.set_model_state_map({
-            # 'world_joint/x': 0.8856,
-            # 'world_joint/y': -0.3937,
-            # 'world_joint/theta': 0,
+            # 'world_joint/x': 0.8,
+            # 'world_joint/y': 0,
+            # 'world_joint/theta': np.pi/2,
+            'world_joint/x': 0.8,
+            'world_joint/y': -1.3,
+            'world_joint/theta': np.pi/2,
             'hand_l_spring_proximal_joint': 0.9,
             'hand_motor_joint': 0.81,
             'hand_r_spring_proximal_joint': 0.9,})
@@ -52,4 +55,5 @@ def pickup_ik(can_position,debug=1):
 
 
 if __name__ == '__main__':
-    pickup_ik([0.8856, -0.3937, 0.7941],debug=1)
+    # pickup_ik([0.8856, -0.3937, 0.7941],debug=1)
+    pickup_ik([0.9, -1, 0.8],debug=1)

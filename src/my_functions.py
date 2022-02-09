@@ -5,6 +5,7 @@ import signal
 from pyexotica.publish_trajectory import sig_int_handler
 import math
 import matplotlib.pyplot as plt
+from scipy.special import comb
 
 def my_transform_can(rotation):
     import math
@@ -167,7 +168,7 @@ def find_turn(traj,max_change):
             return n
         else:
             n += 1
-    return n
+    return 999
 def find_close(traj,point,max_distance):
     '''Find the first point in the traj with distance larger than max_distance'''
     mylist = np.flip(traj,axis=0)
@@ -196,7 +197,7 @@ def my_ik_cost(problem):
         cost_dict[cost_task.name] = cost
     return cost_dict
 
-# Two functions used to find a base trajectory for aico planning
+# Three functions used to find a base trajectory for aico planning
 def my_bezier(can_position,pathlist,num,debug=1):
     '''Return x,y,theta of a bezier'''
     P0, P1, P2 = np.array([pathlist[0][0:2],can_position[0:2],pathlist[1][0:2]])
@@ -222,6 +223,118 @@ def my_set_traj(x,y,theta,path):
         content += "\n {} {} {} {}".format(10/length*i,round(x[i],4),round(y[i],4),round(theta[i],4))
     with open(path, "w") as f:
         f.write(content)
+def my_aico_traj(aico_start,aico_end,goal_position,num,traj_path):
+    '''Find a base trajectory for aico planning'''
+    if (sum((aico_start-aico_end)**2))**0.5<1.2:
+        print("my_aico_traj is bezier for: ",aico_start,aico_end)
+        x,y,theta = my_bezier(goal_position,[aico_start,aico_end],num,debug=0)
+    else:
+        print("my_aico_traj is straight line for: ",aico_start,aico_end)
+        x=[aico_start[0],aico_end[0]]
+        y=[aico_start[1],aico_end[1]]
+        theta=[aico_start[2],aico_end[2]]
+    my_set_traj(x,y,theta,traj_path)
+    return x,y
+
+# Four functions used to find a base trajectory for aico planning: bezier_curve that pass three points
+def get_bezier_parameters(X, Y, degree=2):
+    """ Least square qbezier fit using penrose pseudoinverse.
+
+    Parameters:
+
+    X: array of x data.
+    Y: array of y data. Y[0] is the y point for X[0].
+    degree: degree of the Bézier curve. 2 for quadratic, 3 for cubic.
+
+    Based on https://stackoverflow.com/questions/12643079/b%C3%A9zier-curve-fitting-with-scipy
+    and probably on the 1998 thesis by Tim Andrew Pastva, "Bézier Curve Fitting".
+    """
+    if degree < 1:
+        raise ValueError('degree must be 1 or greater.')
+
+    if len(X) != len(Y):
+        raise ValueError('X and Y must be of the same length.')
+
+    if len(X) < degree + 1:
+        raise ValueError(f'There must be at least {degree + 1} points to '
+                         f'determine the parameters of a degree {degree} curve. '
+                         f'Got only {len(X)} points.')
+
+    def bpoly(n, t, k):
+        """ Bernstein polynomial when a = 0 and b = 1. """
+        return t ** k * (1 - t) ** (n - k) * comb(n, k)
+        #return comb(n, i) * ( t**(n-i) ) * (1 - t)**i
+
+    def bmatrix(T):
+        """ Bernstein matrix for Bézier curves. """
+        return np.matrix([[bpoly(degree, t, k) for k in range(degree + 1)] for t in T])
+
+    def least_square_fit(points, M):
+        M_ = np.linalg.pinv(M)
+        return M_ * points
+
+    T = np.linspace(0, 1, len(X))
+    M = bmatrix(T)
+    points = np.array(list(zip(X, Y)))
+    
+    final = least_square_fit(points, M).tolist()
+    final[0] = [X[0], Y[0]]
+    final[len(final)-1] = [X[len(X)-1], Y[len(Y)-1]]
+    return final
+def bernstein_poly(i, n, t):
+    """
+     The Bernstein polynomial of n, i as a function of t
+    """
+    return comb(n, i) * ( t**(n-i) ) * (1 - t)**i
+def bezier_curve(points, nTimes=50):
+    """
+       Given a set of control points, return the
+       bezier curve defined by the control points.
+
+       points should be a list of lists, or list of tuples
+       such as [ [1,1], 
+                 [2,3], 
+                 [4,5], ..[Xn, Yn] ]
+        nTimes is the number of time steps, defaults to 1000
+
+        See http://processingjs.nihongoresources.com/bezierinfo/
+    """
+
+    nPoints = len(points)
+    xPoints = np.array([p[0] for p in points])
+    yPoints = np.array([p[1] for p in points])
+
+    t = np.linspace(0.0, 1.0, nTimes)
+
+    polynomial_array = np.array([ bernstein_poly(i, nPoints-1, t) for i in range(0, nPoints)   ])
+
+    xvals = np.dot(xPoints, polynomial_array)
+    yvals = np.dot(yPoints, polynomial_array)
+
+    return xvals, yvals
+def my_aico_traj_new(aico_start,aico_end,goal_position,num,traj_path,debug=0):
+    '''Find a base trajectory for aico planning: bezier_curve that pass three points'''
+    points = []
+    xpoints = [aico_start[0],goal_position[0],aico_end[0]]
+    ypoints = [aico_start[1],goal_position[1],aico_end[1]]
+    for i in range(len(xpoints)):
+        points.append([xpoints[i],ypoints[i]])
+    data = get_bezier_parameters(xpoints, ypoints, degree=2)
+    x, y = bezier_curve(data, nTimes=num)
+    if debug:
+        x_val = [x[0] for x in data]
+        y_val = [x[1] for x in data]
+        plt.plot(xpoints, ypoints, "ro",label='Original Points')
+        plt.plot(x_val,y_val,'k--o', label='Control Points')
+        plt.plot(x, y, 'b-', label='B Curve')
+        plt.legend()
+        plt.show()
+    x = np.flip(x)
+    y = np.flip(y)
+    theta = np.linspace(aico_start[2],aico_end[2],num)
+    my_set_traj(x,y,theta,traj_path)
+    return x,y
+
 
 def my_traj_transform(base_list, KDLFrame_startbase):
     '''Takes input of base_list which is an array [x,y,rot] and a KDLFrame.

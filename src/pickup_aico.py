@@ -10,7 +10,7 @@ from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
 
 from my_functions import my_transform_can, my_plot_analysis, my_bezier,my_set_traj
-def pickup_aico(can_position,debug=1,doplot=0):
+def pickup_aico(can_position,traj_path,debug=1,doplot=0):
     # Init
     exo.Setup.init_ros()
     t_grasp_begin=4
@@ -18,6 +18,7 @@ def pickup_aico(can_position,debug=1,doplot=0):
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
+    scene.add_trajectory_from_file("BaseTarget",traj_path)
     BaseTarget_split = scene.get_trajectory("BaseTarget").split("\n")
     start = BaseTarget_split[2].split()
     end = BaseTarget_split[-1].split()
@@ -105,4 +106,5 @@ def pickup_aico(can_position,debug=1,doplot=0):
 
 
 if __name__ == '__main__':
-    pickup_aico([0.8856, -0.3937, 0.7941],debug=1,doplot=1)
+    traj_path="/home/hzhu/ros_123/src/hsr123/resources/pickup/base.traj"
+    pickup_aico([0.8856, -0.3937, 0.7941],traj_path,debug=1,doplot=1)

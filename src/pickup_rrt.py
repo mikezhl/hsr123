@@ -46,4 +46,4 @@ def pickup_rrt(start, goal, debug=1,doplot=0):
 
 
 if __name__ == '__main__':
-    pickup_rrt([-1,-2,0],[ 0.2631, -0.1206, -0.5808],debug=1,doplot=0)
+    pickup_rrt([0.8263, 0,  -0.9085],[1.0022, -1.4,  2.4842],debug=1,doplot=0)
