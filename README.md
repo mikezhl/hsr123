@@ -19,7 +19,7 @@ sudo apt install ros-noetic-exotica-examples
 
 ## Instructions - Basic
 #### Description
-- Pick up a soda can in a fixed place without stopping.
+Pick up a soda can in a fixed place without stopping.
 #### Run a trajectory
 - Start the gazebo simulation: `roslaunch hsr123 basic.launch`
 - Wait for gazebo to finish loading and press play to start the simulation
@@ -30,7 +30,7 @@ sudo apt install ros-noetic-exotica-examples
 
 ## Instructions - Detection
 #### Description
-- Pick up a soda can in a fixed place with apriltag. A modified version of the basic one above, remove the hardcoded part.
+Pick up a soda can in a fixed place with apriltag. A modified version of the basic one above, remove the hardcoded part.
 #### Run!
 - Srat the gazebo simulation, `roslaunch hsr123 detect.launch`
 - Choice 1: Run function `detect_traj_follow(4.5, 0.15, 2.5, new_traj=1)` in `hsr123/src/detect_traj_follow.py` to generate and run the new trajectory.
@@ -38,7 +38,7 @@ sudo apt install ros-noetic-exotica-examples
 
 ## Instructions - Pick Up
 ### Description
-- Pick up a soda can in a random place with apriltag from a random start place. Using IK, AICO and RRT solver.
+Pick up a soda can in a random place with apriltag from a random start place. Using IK, AICO and RRT solver.
 #### Run!
 - Set the starting and ending position of the robot. Set the position of the can since the detection is not working well in gazebo.
 - Start the rviz if gazebo isn't running: `roslaunch hsr123 basic_rviztest.launch`, run `hsr123/src/pickup_plan.py` to generate all the trajectories needed.
