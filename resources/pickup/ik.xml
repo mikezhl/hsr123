@@ -13,6 +13,8 @@
                     <Link Name="TargetObject"/>
                 </Links>
                 <LoadScene>{hsr123}/resources/meeting_room_table.scene;{hsr123}/resources/soda_can.scene</LoadScene>
+                <!-- Hacky work-around for collision between fingers and can -->
+                <RobotLinksToExcludeFromCollisionScene>head_pan_link,hand_palm_link,hand_l_spring_proximal_link,hand_r_spring_proximal_link</RobotLinksToExcludeFromCollisionScene>
             </Scene>
         </PlanningScene>
 
@@ -31,7 +33,8 @@
                 </EndEffector>
             </EffAxisAlignment>
 
-            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="1" WorldMargin="0.03" RobotMargin="0.01"/>
+            <!-- <SmoothCollisionDistance Name="SCD" CheckSelfCollision="1" WorldMargin="0.03" RobotMargin="0.01"/> -->
+            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="0" WorldMargin="0.03"/>
             <!-- <SumOfPenetrations Name="SumOfPenetrations" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/> -->
 
             <!-- <EffPosition Name="BasePosition">
@@ -39,6 +42,12 @@
                     <Frame Link="base_footprint" Base="TargetObject"/>
                 </EndEffector>
             </EffPosition> -->
+
+            <!-- Regularise y to 0, away from the table -->
+            <JointPose Name="BasePosition">
+                <JointMap>1</JointMap>
+                <JointRef>0</JointRef>
+            </JointPose>
 
         </Maps>
 
@@ -50,9 +59,9 @@
             <!-- Alignment of the end-effector during/after the grasphing phase. Rho set in Python. -->
             <Task Task="EffAxisAlignment_after_grasp" Rho="1e5"/>
             <!-- Collision avoidance -->
-            <Task Task="SCD" Rho="1e2"/>
+            <Task Task="SCD" Rho="1"/>
             <!-- <Task Task="SumOfPenetrations" Rho="1e2"/> -->
-            <!-- <Task Task="BasePosition" Rho="1e4"/> -->
+            <Task Task="BasePosition" Rho="1e1"/>
         </Cost>
 
         <!-- <W>1 1 1 1 1 1 1 1</W> -->
