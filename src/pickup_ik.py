@@ -40,9 +40,10 @@ def pickup_ik(can_position,debug=1):
 
     # Solve
     solution = solver.solve()
-    print(my_ik_cost(problem))
+    print("Costs", my_ik_cost(problem))
 
-
+    from pyexotica.tools import get_colliding_links
+    print("Colliding links", get_colliding_links(scene))
 
     # Visualization in rviz
     if debug:
