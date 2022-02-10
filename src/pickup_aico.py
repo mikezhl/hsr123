@@ -10,7 +10,7 @@ from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
 
 from my_functions import my_transform_can, my_plot_analysis, my_bezier,my_set_traj
-def pickup_aico(can_position,traj_path,cost_before_grasp,debug=1,doplot=0):
+def pickup_aico(can_position,traj_path,gripper_orientation,debug=1,doplot=0):
     # Init
     exo.Setup.init_ros()
     t_grasp_begin=4
@@ -53,10 +53,11 @@ def pickup_aico(can_position,traj_path,cost_before_grasp,debug=1,doplot=0):
 
     # Set the Task map
     location_can = scene.fk('SodaCan').get_translation_and_rpy()
-    location_gripper = scene.fk('hand_palm_link').get_translation_and_rpy()
-    relative_direction = location_can-location_gripper
-    gripper_orientation = [relative_direction[0],relative_direction[1]]
-    gripper_orientation = gripper_orientation/(gripper_orientation[0]**2+gripper_orientation[1]**2)**0.5
+    if isinstance(gripper_orientation,int):
+        location_gripper = scene.fk('hand_palm_link').get_translation_and_rpy()
+        relative_direction = location_can-location_gripper
+        gripper_orientation = [relative_direction[0],relative_direction[1]]
+        gripper_orientation = gripper_orientation/(gripper_orientation[0]**2+gripper_orientation[1]**2)**0.5
     t_grasp_duration = 0.5
     T_grasp_begin = int(t_grasp_begin / problem.tau)
     T_grasp_end = int((t_grasp_begin + t_grasp_duration) / problem.tau)
@@ -66,7 +67,7 @@ def pickup_aico(can_position,traj_path,cost_before_grasp,debug=1,doplot=0):
         problem.set_rho('EffPosition', 1e3, t)
         problem.set_goal('EffPosition', location_can[:3], t)
     for t in range(T_grasp_begin-15,T_grasp_begin-10):
-        problem.set_rho('EffAxisAlignment_before_grasp', cost_before_grasp, t)
+        problem.set_rho('EffAxisAlignment_before_grasp', 100, t)
     for t in range(T_grasp_begin, problem.T):
         problem.set_rho('EffAxisAlignment_after_grasp', 1e3, t)
     problem.set_rho('LiftOffTable', 1e2, T_grasp_begin - 20)
@@ -89,7 +90,8 @@ def pickup_aico(can_position,traj_path,cost_before_grasp,debug=1,doplot=0):
         midpoint = int((t_grasp_begin + t_grasp_duration)/problem.tau)
         signal.signal(signal.SIGINT, sig_int_handler)
         print("mug_location:",location_can)
-        print(solution)
+        # print(solution)
+        print(gripper_orientation)
         t = 0
         while True:
             problem.get_scene().update(solution[t], float(t) * problem.T)
@@ -106,5 +108,5 @@ def pickup_aico(can_position,traj_path,cost_before_grasp,debug=1,doplot=0):
 
 
 if __name__ == '__main__':
-    traj_path=sys.path[0]+"/pickup_traj/base2.traj"
-    pickup_aico([0.9, -1, 0.9],traj_path,50,debug=1,doplot=1)
+    traj_path=sys.path[0]+"/pickup_traj/base1.traj"
+    pickup_aico([0.1, -0.3937, 0.7941],traj_path,0,debug=1,doplot=1)

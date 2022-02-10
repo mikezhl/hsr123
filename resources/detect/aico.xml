@@ -55,7 +55,7 @@
 
             <PointToPlane Name="LiftOffTable">
                 <EndEffector>
-                    <Frame Link="hand_palm_link" Base="Table"/>
+                    <Frame Link="hand_palm_link" Base="BaseTarget"/>
                 </EndEffector>
             </PointToPlane>
             
@@ -76,7 +76,7 @@
             <Task Task="EffAxisAlignment_after_grasp" Rho="0"/>
             <Task Task="EffAxisAlignment_before_grasp" Rho="0"/>
             <!-- Avoid collision with table -->
-            <Task Task="LiftOffTable" Rho="0" Goal="0.08"/>
+            <Task Task="LiftOffTable" Rho="0" Goal="0.1"/>
             <!-- Achieve a zero-rotation at the end of the trajectory. Rho set in Python. -->
             <Task Task="FinalPose" Rho="0"/>
             <!-- Collision avoidance -->

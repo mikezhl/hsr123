@@ -12,7 +12,7 @@ import math
 debug=1
 start=[-1,-2,0]
 end=[3,-1,0]
-can_position = [0.8856, -0.3937, 0.7941]
+can_position = [0.1, -0.3937, 0.7941]
 place_position = [0.9, -1, 0.9]
 # For setting orientation
 Y_r2c = math.atan2(can_position[1]-start[1],can_position[0]-start[0])
@@ -32,6 +32,14 @@ traj_rrt1,traj_rrt21 = find_aico_point(traj_rrt1_full,traj_rrt2_full,0.25,base_f
 traj_rrt2,traj_rrt3 = find_aico_point(traj_rrt21,traj_rrt3_full,0.25,base_for_place,0.5)
 aico_start1,aico_end1 = traj_rrt1[-1,:],traj_rrt21[0,:]
 aico_start2,aico_end2 = traj_rrt2[-1,:],traj_rrt3[0,:]
+
+# Change the orientation of the path for better grasping
+start_orientation1 = math.atan2(can_position[1]-aico_start1[1],can_position[0]-aico_start1[0])
+traj_rrt1[:,2] = np.linspace(traj_rrt1[0,2],start_orientation1,len(traj_rrt1),endpoint=True)
+start_orientation2 = math.atan2(place_position[1]-aico_start2[1],place_position[0]-aico_start2[0])
+traj_rrt2[:,2] = np.linspace(traj_rrt2[0,2],start_orientation2,len(traj_rrt2),endpoint=True)
+aico_start1[2]=start_orientation1
+aico_start2[2]=start_orientation2
 print("From find_aico_point, start1 and end1: ", aico_start1,aico_end1)
 print("From find_aico_point, start2 and end2: ", aico_start2,aico_end2)
 
@@ -63,7 +71,9 @@ if debug:
 
 # Generate arm and base trajectory for grasping
 print("===Finding the arm and base trajectory for grasping")
-traj_aico1 = pickup_aico(can_position,traj_path1,50,debug=0,doplot=0)
+# traj_aico1 = pickup_aico(can_position,traj_path1,can_position[0:2]-base_for_pickup[0:2],debug=0,doplot=0)
+# traj_aico2 = pickup_aico(place_position,traj_path2,place_position[0:2]-base_for_place[0:2],debug=0,doplot=0)
+traj_aico1 = pickup_aico(can_position,traj_path1,0,debug=0,doplot=0)
 traj_aico2 = pickup_aico(place_position,traj_path2,0,debug=0,doplot=0)
 
 # Move in RViz

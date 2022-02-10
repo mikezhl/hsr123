@@ -159,7 +159,7 @@ def find_turn(traj,max_change):
     vec = np.diff(traj, axis=0)
     deg=np.zeros(len(vec))
     for i in range(len(vec)):
-        deg[i] = math.atan2(vec[i,0],vec[i,1])
+        deg[i] = math.atan2(vec[i,1],vec[i,0])
     change = list(np.diff(deg))
     change.reverse()
     n=0

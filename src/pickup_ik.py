@@ -73,5 +73,5 @@ def pickup_ik(goal,debug=1):
 
 
 if __name__ == '__main__':
-    # pickup_ik([0.8856, -0.3937, 0.7941],debug=1)
-    pickup_ik([0.9, -1, 0.9],debug=1)
+    pickup_ik([0.1, -0.3937, 0.7941],debug=1)
+    # pickup_ik([0.9, -1, 0.9],debug=1)
