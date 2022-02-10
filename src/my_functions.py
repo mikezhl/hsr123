@@ -190,14 +190,23 @@ def my_ik_cost(problem):
     '''Return the cost in dictionary'''
     ydiff = problem.cost.ydiff
     cost_dict = {}
+    cost_total=0
     for cost_task in problem.cost.tasks:
         # can also use problem.cost.get_task_error(task_name)
         taskydiff = ydiff[cost_task.startJ:cost_task.startJ+cost_task.lengthJ]
         # can also use problem.cost.get_S(task_name)
         rho = problem.cost.S[cost_task.startJ:cost_task.startJ+cost_task.lengthJ,cost_task.startJ:cost_task.startJ+cost_task.lengthJ]
         cost = np.dot(np.dot(taskydiff, rho), taskydiff)
+        cost_total += cost
         cost_dict[cost_task.name] = cost
-    return cost_dict
+    return cost_total,cost_dict
+def my_random_start_ik(center,r,num):
+    '''Generate random start point for ik solver'''
+    start_list=[]
+    theta = 2*np.pi/num
+    for i in range(num):
+        start_list.append([center[0]+r*np.sin(theta*i),center[1]+r*np.cos(theta*i)])
+    return np.array(start_list)
 
 # Three functions used to find a base trajectory for aico planning
 def my_bezier(can_position,pathlist,num,debug=1):
@@ -349,7 +358,6 @@ def my_traj_transform(base_list, KDLFrame_startbase):
     base_list = KDLFrame_goal.get_translation_and_rpy()
     col_index = [0,1,5]
     return base_list[col_index]
-
 
 
 

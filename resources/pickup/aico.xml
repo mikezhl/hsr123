@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <PlannerDemoConfig>
     <AICOSolver Name="MySolver">
-        <Debug>1</Debug>
         <MaxIterations>500</MaxIterations>
         <MaxBacktrackIterations>50</MaxBacktrackIterations>
         <FunctionTolerance>1e-5</FunctionTolerance>

@@ -10,7 +10,7 @@ from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
 
 from my_functions import my_transform_can, my_plot_analysis, my_bezier,my_set_traj
-def pickup_aico(can_position,traj_path,debug=1,doplot=0):
+def pickup_aico(can_position,traj_path,cost_before_grasp,debug=1,doplot=0):
     # Init
     exo.Setup.init_ros()
     t_grasp_begin=4
@@ -65,8 +65,8 @@ def pickup_aico(can_position,traj_path,debug=1,doplot=0):
     for t in range(T_grasp_begin, T_grasp_end):
         problem.set_rho('EffPosition', 1e3, t)
         problem.set_goal('EffPosition', location_can[:3], t)
-    for t in range(T_grasp_begin-10,T_grasp_begin-5):
-        problem.set_rho('EffAxisAlignment_before_grasp', 1e1, t)
+    for t in range(T_grasp_begin-15,T_grasp_begin-10):
+        problem.set_rho('EffAxisAlignment_before_grasp', cost_before_grasp, t)
     for t in range(T_grasp_begin, problem.T):
         problem.set_rho('EffAxisAlignment_after_grasp', 1e3, t)
     problem.set_rho('LiftOffTable', 1e2, T_grasp_begin - 20)
@@ -79,13 +79,13 @@ def pickup_aico(can_position,traj_path,debug=1,doplot=0):
         init_pose[t,:] = q_start
     problem.initial_trajectory = init_pose
     solution = solver.solve()
-    print("Solved in", solver.get_planning_time(), "final cost", problem.get_cost_evolution()[1][-1])
     if doplot:
         my_plot_analysis(problem,solution,scene)
 
     # Visualization in rviz
     if debug:
-        np.save(sys.path[0]+"/trajectories/"+"detect",solution)
+        print("Solved in", solver.get_planning_time(), "final cost", problem.get_cost_evolution()[1][-1])
+        np.save(sys.path[0]+"/trajectories/"+"pickup_aico",solution)
         midpoint = int((t_grasp_begin + t_grasp_duration)/problem.tau)
         signal.signal(signal.SIGINT, sig_int_handler)
         print("mug_location:",location_can)
@@ -106,5 +106,5 @@ def pickup_aico(can_position,traj_path,debug=1,doplot=0):
 
 
 if __name__ == '__main__':
-    traj_path="/home/hzhu/ros_123/src/hsr123/resources/pickup/base.traj"
-    pickup_aico([0.8856, -0.3937, 0.7941],traj_path,debug=1,doplot=1)
+    traj_path=sys.path[0]+"/pickup_traj/base2.traj"
+    pickup_aico([0.9, -1, 0.9],traj_path,50,debug=1,doplot=1)

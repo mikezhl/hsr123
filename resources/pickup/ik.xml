@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <PlannerDemoConfig>
-    <BayesianIKSolver Name="MySolver" MaxIterations="500" Damping="1" Debug="1" MaxBacktrackIterations="100"/>
+    <BayesianIKSolver Name="MySolver" MaxIterations="500" Damping="1" MaxBacktrackIterations="100"/>
 
     <UnconstrainedEndPoseProblem Name="MyProblem">
         <PlanningScene>
@@ -33,14 +33,13 @@
                 </EndEffector>
             </EffAxisAlignment>
 
-            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="1" WorldMargin="0.03" RobotMargin="0.01"/>
+            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="1" WorldMargin="0.11" RobotMargin="0.01"/>
             <!-- <SumOfPenetrations Name="SumOfPenetrations" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/> -->
-
-            <!-- <EffPosition Name="BasePosition">
+            <Distance Name="Distance">
                 <EndEffector>
-                    <Frame Link="base_footprint" Base="TargetObject"/>
+                <Frame Link="base_footprint" Base="TargetObject"/>
                 </EndEffector>
-            </EffPosition> -->
+            </Distance>
         </Maps>
 
         <Cost>
@@ -53,7 +52,7 @@
             <!-- Collision avoidance -->
             <Task Task="SCD" Rho="1e2"/>
             <!-- <Task Task="SumOfPenetrations" Rho="1e2"/> -->
-            <!-- <Task Task="BasePosition" Rho="1e4"/> -->
+            <Task Task="Distance" Rho="5e2"/>
         </Cost>
 
         <!-- <W>1 1 1 1 1 1 1 1</W> -->

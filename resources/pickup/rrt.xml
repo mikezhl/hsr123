@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <PlannerDemoConfig>
 
-  <RRTConnectSolver Name="MySolver" SimplifyTryCnt="10" SimplifyInterpolationLength="100" RangeRatio="0.33" SnapToVertex="0.005">
+  <RRTConnectSolver Name="MySolver" SimplifyTryCnt="20" SimplifyInterpolationLength="100" RangeRatio="1" SnapToVertex="1">
   </RRTConnectSolver>
 
   <SamplingProblem Name="MyProblem">
