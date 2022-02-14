@@ -58,7 +58,7 @@ def pickup_aico(can_position,traj_path,gripper_orientation,debug=1,doplot=0):
         relative_direction = location_can-location_gripper
         gripper_orientation = [relative_direction[0],relative_direction[1]]
         gripper_orientation = gripper_orientation/(gripper_orientation[0]**2+gripper_orientation[1]**2)**0.5
-    t_grasp_duration = 0.5
+    t_grasp_duration = 1.5
     T_grasp_begin = int(t_grasp_begin / problem.tau)
     T_grasp_end = int((t_grasp_begin + t_grasp_duration) / problem.tau)
     problem.get_task_maps()["EffAxisAlignment_before_grasp"].set_direction("hand_palm_link",np.append(gripper_orientation,[0.0]))
@@ -70,8 +70,8 @@ def pickup_aico(can_position,traj_path,gripper_orientation,debug=1,doplot=0):
         problem.set_rho('EffAxisAlignment_before_grasp', 100, t)
     for t in range(T_grasp_begin, problem.T):
         problem.set_rho('EffAxisAlignment_after_grasp', 1e3, t)
-    problem.set_rho('LiftOffTable', 1e2, T_grasp_begin - 20)
-    problem.set_rho('LiftOffTable', 1e2, T_grasp_end + 20)
+    for t in range(10, problem.T-10):
+        problem.set_rho('StayHeight', 1e2, t)
     problem.set_rho('FinalPose', 1e3, -1)
 
     # Solve

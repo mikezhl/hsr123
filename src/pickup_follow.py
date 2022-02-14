@@ -17,7 +17,7 @@ traj_aico1 = np.load(sys.path[0]+"/pickup_traj/"+"traj_aico1.npy")
 traj_aico2 = np.load(sys.path[0]+"/pickup_traj/"+"traj_aico2.npy")
 
 dt=0.15
-vel_limit = 0.1
+vel_limit = 0.05
 start=[-1,-2,0.70558]
 # Initialize
 print("Initializing")

@@ -34,7 +34,7 @@
   <arg name="table_y" default="-0.7" />
   <node name="spawn_table" pkg="gazebo_ros" type="spawn_model"
         args="-file $(find hsr123)/models/table/model.sdf -sdf -x $(arg table_x) -y $(arg table_y) -model table" />
-  <arg name="bottle_x" default="0.9" />
+  <arg name="bottle_x" default="0.1" />
   <arg name="bottle_y" default="-0.4" />
   <arg name="bottle_z" default="0.8" />
   <arg name="bottle_Y" default="-2.43" />

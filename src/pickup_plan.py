@@ -12,7 +12,7 @@ import math
 debug=1
 start=[-1,-2,0]
 end=[3,-1,0]
-can_position = [0.1, -0.3937, 0.7941]
+can_position = [0.1, -0.4, 0.7941]
 place_position = [0.9, -1, 0.9]
 # For setting orientation
 Y_r2c = math.atan2(can_position[1]-start[1],can_position[0]-start[0])
