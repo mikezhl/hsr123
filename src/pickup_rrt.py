@@ -11,6 +11,19 @@ import exotica_core_task_maps_py
 import matplotlib.pyplot as plt
 import time
 
+def loop_rviz(problem,solution):
+    '''Show solution in RViz'''
+    print("Solved, looping in RViz")
+    signal.signal(signal.SIGINT, sig_int_handler)
+    t = 0
+    while True:
+        problem.get_scene().update(solution[t], float(t) * 0.1)
+        # print("==========================================")
+        # print(exo.tools.get_colliding_links(scene, debug=True))
+        problem.get_scene().get_kinematic_tree().publish_frames()
+        sleep(0.1)
+        t = (t + 1) % len(solution)
+
 def pickup_rrt(start, goal, debug=1):
     # Init
     exo.Setup.init_ros()
@@ -18,6 +31,7 @@ def pickup_rrt(start, goal, debug=1):
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
+    scene.load_scene("{hsr123}/resources/meeting_room_table.scene")
 
     # Set start states
     problem.start_state = start
@@ -33,19 +47,12 @@ def pickup_rrt(start, goal, debug=1):
         print(len(solution),solution)
         plt.plot(solution[:,0],solution[:,1],'xr')
         plt.show()
-        t = 0
-        signal.signal(signal.SIGINT, sig_int_handler)
-        while True:
-            problem.get_scene().update(solution[t], float(t) * 0.1)
-            # print("==========================================")
-            # print(exo.tools.get_colliding_links(scene, debug=True))
-            problem.get_scene().get_kinematic_tree().publish_frames()
-            sleep(0.1)
-            t = (t + 1) % len(solution)
+        loop_rviz(problem,solution)
     else:
         return solution
 
 def pickup_rrt_loop(start, goal,num=5,debug=1):
+    '''Run RRT many times and find the best one'''
     # Init
     pickup_rrt_loop_starttime = time.time()
     exo.Setup.init_ros()
@@ -53,6 +60,7 @@ def pickup_rrt_loop(start, goal,num=5,debug=1):
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
+    scene.load_scene_file("{hsr123}/resources/meeting_room_table.scene")
 
     # Set start states
     problem.start_state = start
@@ -80,6 +88,8 @@ def pickup_rrt_loop(start, goal,num=5,debug=1):
         plt.plot(solution[:,0],solution[:,1],'b--',label="Solution")
         plt.legend(loc="upper left")
         plt.show()
+        loop_rviz(problem,solution)
+        
     else:
         return solution
 

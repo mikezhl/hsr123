@@ -21,7 +21,6 @@
                 <Trajectories>
                     <Trajectory Link="BaseTarget" File="{hsr123}/resources/pickup/base.traj"/>
                 </Trajectories>
-                <LoadScene>{hsr123}/resources/meeting_room_table.scene;{hsr123}/resources/soda_can.scene</LoadScene>
             </Scene>
         </PlanningScene>
 

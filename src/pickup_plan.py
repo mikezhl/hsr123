@@ -73,8 +73,8 @@ if debug:
 print("===Finding the arm and base trajectory for grasping")
 # traj_aico1 = pickup_aico(can_position,traj_path1,can_position[0:2]-base_for_pickup[0:2],debug=0,doplot=0)
 # traj_aico2 = pickup_aico(place_position,traj_path2,place_position[0:2]-base_for_place[0:2],debug=0,doplot=0)
-traj_aico1 = pickup_aico(can_position,traj_path1,0,debug=0,doplot=0)
-traj_aico2 = pickup_aico(place_position,traj_path2,0,debug=0,doplot=0)
+traj_aico1 = pickup_aico(can_position,traj_path1,gripper_orientation=0,debug=0,doplot=0)
+traj_aico2 = pickup_aico(place_position,traj_path2,gripper_orientation=0,debug=0,doplot=0)
 
 # Move in RViz
 if debug:

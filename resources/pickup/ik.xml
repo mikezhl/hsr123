@@ -12,7 +12,6 @@
                 <Links>
                     <Link Name="TargetObject"/>
                 </Links>
-                <LoadScene>{hsr123}/resources/meeting_room_table.scene;{hsr123}/resources/soda_can.scene</LoadScene>
                 <!-- Hacky work-around for collision between fingers and can -->
                 <RobotLinksToExcludeFromCollisionScene>head_pan_link,hand_palm_link,hand_l_spring_proximal_link,hand_r_spring_proximal_link</RobotLinksToExcludeFromCollisionScene>
             </Scene>

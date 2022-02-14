@@ -12,7 +12,6 @@
         <SetRobotDescriptionRosParams>1</SetRobotDescriptionRosParams>
         <URDF>{hsr123}/resources/hsrb.urdf</URDF>
         <SRDF>{hsr123}/resources/hsrb.srdf</SRDF>
-        <LoadScene>{hsr123}/resources/meeting_room_table.scene;</LoadScene>
       </Scene>
     </PlanningScene>
 

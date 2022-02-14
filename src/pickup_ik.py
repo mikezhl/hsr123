@@ -17,7 +17,9 @@ def pickup_ik(goal,debug=1):
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
-
+    scene.load_scene_file("{hsr123}/resources/meeting_room_table.scene")
+    scene.load_scene_file("{hsr123}/resources/soda_can.scene")
+    
     # Set start states
     scene.attach_object("SodaCan", "TargetObject")
     scene.attach_object_local("TargetObject", "", exo.KDLFrame(goal))
