@@ -14,6 +14,8 @@ start=[-1,-2,0]
 end=[3,-1,0]
 can_position = [0.1, -0.4, 0.7941]
 place_position = [0.9, -1, 0.9]
+scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene"]
+scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/soda_can.scene"]
 # For setting orientation
 Y_r2c = math.atan2(can_position[1]-start[1],can_position[0]-start[0])
 Y_c2r = math.atan2(start[1]-can_position[1],start[0]-can_position[0])
@@ -21,13 +23,13 @@ start[2] = Y_r2c
 
 # Find the base trajectory and find the start and end for AICO pickup
 print("===Finding the base trajectory and the start and end for AICO pickup")
-base_for_pickup = pickup_ik(can_position,debug=0)
-base_for_place = pickup_ik(place_position,debug=0)
+base_for_pickup = pickup_ik(can_position,scene_list,debug=0)
+base_for_place = pickup_ik(place_position,scene_list,debug=0)
 print("From pickup_ik, base_for_pickup: ",base_for_pickup[0:3])
 print("From pickup_ik: base_for_place: ",base_for_place[0:3])
-traj_rrt1_full = pickup_rrt_loop(start,base_for_pickup[0:3],5,debug=0)
-traj_rrt2_full = pickup_rrt_loop(base_for_pickup[0:3],base_for_place[0:3],5,debug=0)
-traj_rrt3_full = pickup_rrt_loop(base_for_place[0:3],end,5,debug=0)
+traj_rrt1_full = pickup_rrt_loop(start,base_for_pickup[0:3],scene_list_rrt,num=5,debug=0)
+traj_rrt2_full = pickup_rrt_loop(base_for_pickup[0:3],base_for_place[0:3],scene_list_rrt,num=5,debug=0)
+traj_rrt3_full = pickup_rrt_loop(base_for_place[0:3],end,scene_list_rrt,num=5,debug=0)
 traj_rrt1,traj_rrt21 = find_aico_point(traj_rrt1_full,traj_rrt2_full,0.25,base_for_pickup,0.5)
 traj_rrt2,traj_rrt3 = find_aico_point(traj_rrt21,traj_rrt3_full,0.25,base_for_place,0.5)
 aico_start1,aico_end1 = traj_rrt1[-1,:],traj_rrt21[0,:]
@@ -73,8 +75,8 @@ if debug:
 print("===Finding the arm and base trajectory for grasping")
 # traj_aico1 = pickup_aico(can_position,traj_path1,can_position[0:2]-base_for_pickup[0:2],debug=0,doplot=0)
 # traj_aico2 = pickup_aico(place_position,traj_path2,place_position[0:2]-base_for_place[0:2],debug=0,doplot=0)
-traj_aico1 = pickup_aico(can_position,traj_path1,gripper_orientation=0,debug=0,doplot=0)
-traj_aico2 = pickup_aico(place_position,traj_path2,gripper_orientation=0,debug=0,doplot=0)
+traj_aico1 = pickup_aico(can_position,traj_path1,scene_list,gripper_orientation=0,debug=0,doplot=0)
+traj_aico2 = pickup_aico(place_position,traj_path2,scene_list,gripper_orientation=0,debug=0,doplot=0)
 
 # Move in RViz
 if debug:
@@ -88,4 +90,4 @@ if debug:
     traj_rrt2 = np.concatenate((traj_rrt2,np.resize(arm_traj,(len(traj_rrt2),5))), axis=1)
     traj_rrt3 = np.concatenate((traj_rrt3,np.resize(arm_traj,(len(traj_rrt3),5))), axis=1)
     print("ALL DONE, Looping the solution in RViz")
-    my_pickup(np.concatenate((traj_rrt1,traj_aico1,traj_rrt2,traj_aico2,traj_rrt3), axis=0),can_position)
+    my_pickup(np.concatenate((traj_rrt1,traj_aico1,traj_rrt2,traj_aico2,traj_rrt3), axis=0),can_position,scene_list)

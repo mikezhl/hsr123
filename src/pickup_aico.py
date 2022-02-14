@@ -10,7 +10,7 @@ from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
 
 from my_functions import my_transform_can, my_plot_analysis, my_bezier,my_set_traj
-def pickup_aico(can_position,traj_path,gripper_orientation=0,debug=1,doplot=0):
+def pickup_aico(can_position,traj_path,scene_list,gripper_orientation=0,debug=1,doplot=0):
     # Init
     exo.Setup.init_ros()
     t_grasp_begin=4
@@ -18,8 +18,9 @@ def pickup_aico(can_position,traj_path,gripper_orientation=0,debug=1,doplot=0):
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
-    scene.load_scene_file("{hsr123}/resources/meeting_room_table.scene")
-    scene.load_scene_file("{hsr123}/resources/soda_can.scene")
+    for i in scene_list:
+        scene.load_scene_file(i)
+    problem.pre_update()
 
     scene.add_trajectory_from_file("BaseTarget",traj_path)
     BaseTarget_split = scene.get_trajectory("BaseTarget").split("\n")
@@ -112,4 +113,5 @@ def pickup_aico(can_position,traj_path,gripper_orientation=0,debug=1,doplot=0):
 
 if __name__ == '__main__':
     traj_path=sys.path[0]+"/pickup_traj/base1.traj"
-    pickup_aico([0.1, -0.3937, 0.7941],traj_path,gripper_orientation=0,debug=1,doplot=0)
+    scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/soda_can.scene"]
+    pickup_aico([0.1, -0.3937, 0.7941],traj_path,scene_list,gripper_orientation=0,debug=1,doplot=0)

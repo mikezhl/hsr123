@@ -116,7 +116,7 @@ def my_Simple_Action_Clients():
     print("Simple Action Clients created")
     return cli_arm, cli_base
 
-def my_pickup(solution,can_position):
+def my_pickup(solution,can_position,scene_list):
     '''For debug, send the trajectory to RViz for visualisation'''
     from time import sleep
     import pyexotica as exo
@@ -125,6 +125,9 @@ def my_pickup(solution,can_position):
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
+    for i in scene_list:
+        scene.load_scene_file(i)
+    problem.pre_update()
     scene.attach_object("SodaCan", "TargetObject")
     scene.attach_object_local("TargetObject", "", exo.KDLFrame(can_position))
     scene.set_model_state_map({

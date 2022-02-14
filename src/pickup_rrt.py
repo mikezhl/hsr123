@@ -24,14 +24,15 @@ def loop_rviz(problem,solution):
         sleep(0.1)
         t = (t + 1) % len(solution)
 
-def pickup_rrt(start, goal, debug=1):
+def pickup_rrt(start, goal, scene_list, debug=1):
     # Init
     exo.Setup.init_ros()
     config_name = '{hsr123}/resources/pickup/rrt.xml'
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
-    scene.load_scene("{hsr123}/resources/meeting_room_table.scene")
+    for i in scene_list:
+        scene.load_scene_file(i)
 
     # Set start states
     problem.start_state = start
@@ -51,7 +52,7 @@ def pickup_rrt(start, goal, debug=1):
     else:
         return solution
 
-def pickup_rrt_loop(start, goal,num=5,debug=1):
+def pickup_rrt_loop(start, goal,scene_list,num=5,debug=1):
     '''Run RRT many times and find the best one'''
     # Init
     pickup_rrt_loop_starttime = time.time()
@@ -60,7 +61,8 @@ def pickup_rrt_loop(start, goal,num=5,debug=1):
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
-    scene.load_scene_file("{hsr123}/resources/meeting_room_table.scene")
+    for i in scene_list:
+        scene.load_scene_file(i)
 
     # Set start states
     problem.start_state = start
@@ -95,5 +97,6 @@ def pickup_rrt_loop(start, goal,num=5,debug=1):
 
 
 if __name__ == '__main__':
-    # pickup_rrt([-1,-2,0],[ 0.9187 ,-0.0243, -2.0765],debug=1)
-    pickup_rrt_loop([ 0.9187, -0.0243, -2.0765],[ 0.411 , -1.4464,  0.6101],5)
+    scene_list=["{hsr123}/resources/meeting_room_table.scene"]
+    # pickup_rrt([-1,-2,0],[ 0.9187 ,-0.0243, -2.0765],scene_list, debug=1)
+    pickup_rrt_loop([ 0.9187, -0.0243, -2.0765],[ 0.411 , -1.4464,  0.6101],scene_list,num=5)

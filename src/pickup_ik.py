@@ -10,15 +10,15 @@ import matplotlib.pyplot as plt
 from my_functions import my_ik_cost, my_random_start_ik
 
 
-def pickup_ik(goal,debug=1):
+def pickup_ik(goal,scene_list,debug=1):
     # Init
     exo.Setup.init_ros()
     config_name = '{hsr123}/resources/pickup/ik.xml'
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
-    scene.load_scene_file("{hsr123}/resources/meeting_room_table.scene")
-    scene.load_scene_file("{hsr123}/resources/soda_can.scene")
+    for i in scene_list:
+        scene.load_scene_file(i)
     
     # Set start states
     scene.attach_object("SodaCan", "TargetObject")
@@ -75,5 +75,6 @@ def pickup_ik(goal,debug=1):
 
 
 if __name__ == '__main__':
-    pickup_ik([0.1, -0.3937, 0.7941],debug=1)
-    # pickup_ik([0.9, -1, 0.9],debug=1)
+    scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/soda_can.scene"]
+    pickup_ik([0.1, -0.3937, 0.7941],scene_list,debug=1)
+    # pickup_ik([0.9, -1, 0.9],scene_list,debug=1)
