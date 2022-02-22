@@ -39,8 +39,5 @@
   <arg name="bottle_z" default="0.8" />
   <arg name="bottle_Y" default="2.5" />
   <node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model"
-        args="-file $(find hsr123)/models/hsr_coke_with_april/model.sdf -sdf -x $(arg bottle_x) -y $(arg bottle_y) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle" />
-  <!-- <node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model"
-        args="-file $(find hsr123)/models/hsr_coke_with_ar/model.sdf -sdf -x $(arg bottle_x) -y $(arg bottle_y) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle" /> -->
-
+        args="-file $(find hsr123)/models/hsr_coke/model.sdf -sdf -x $(arg bottle_x) -y $(arg bottle_y) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle" />
 </launch>
