@@ -74,11 +74,15 @@ def detect(target_id,debug=0):
             cv2.rectangle(image, (box[0], box[1] - 20), (box[0] + box[2], box[1]), (0, 255, 255), -1)
             cv2.putText(image, class_list[class_id], (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,0))
         cv2.imshow("output", image)
-        cv2.waitKey()
+        
     target_box = target_list[0][1]
-    target_distance = get_distance(target_box)
+    target_distance = get_distance(target_box,1)
+
+
+
     print(target_box,target_distance)
 
 
 if __name__ == '__main__':
     detect(41,1)
+    cv2.waitKey()

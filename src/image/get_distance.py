@@ -13,8 +13,7 @@ def get_distance(position,debug=0):
     if debug:
         cv2.rectangle(cv_image, position, (0, 255, 255), 2)
         cv2.imshow("get_distance", cv_image)
-    else:
-        return distance
+    return distance
 
 if __name__ == '__main__':
     position = [527, 319,  44,  79]
