@@ -43,3 +43,7 @@ Pick up a soda can in a random place with apriltag from a random start place. Us
 - Set the starting and ending position of the robot. Set the position of the can since the detection is not working well in gazebo.
 - Start the rviz if gazebo isn't running: `roslaunch hsr123 basic_rviztest.launch`, run `hsr123/src/pickup_plan.py` to generate all the trajectories needed.
 - Run the trajectory in gazebo, firstly start the gazebo with `roslaunch hsr123 pickup.launch`, then run `hsr123/src/pickup_follow.py`.
+
+## Instructions - YOLO detection
+### Description
+Pick up a soda can in a random place with yolo v5 detection. Robots start from a random place. Using IK, AICO and RRT solver. (Download `yolov3.weights` into `hsr123/src/image/yolo_models` before using)

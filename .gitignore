@@ -2,6 +2,4 @@
 __pycache__/
 test.py
 test.launch
-yolov3.cfg
 yolov3.weights
-image/
