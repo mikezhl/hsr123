@@ -1,5 +1,10 @@
 import numpy as np
 import cv2
+import rospy
+import tf2_ros
+import tf
+from geometry_msgs.msg import TransformStamped
+from tf2_geometry_msgs import PointStamped
 
 from get_image import get_image
 from get_distance import get_distance
@@ -75,15 +80,47 @@ def detect(target_id,debug=0):
             cv2.rectangle(image, (box[0], box[1] - 20), (box[0] + box[2], box[1]), (0, 255, 255), -1)
             cv2.putText(image, class_list[class_id], (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,0))
         cv2.imshow("output", image)
-        
-    target_box = target_list[0][1]
-    target_distance = get_distance(target_box,1)
-    
-
-
-    print(target_box,target_distance)
+    return target_list
 
 
 if __name__ == '__main__':
-    detect(41,1)
-    cv2.waitKey()
+    target_list = detect(41)
+
+    target_box = target_list[0][1]
+    target_distance = get_distance(target_box)
+    target_direction = np.array(get_xyz(target_box))
+    target_vector = target_direction*target_distance
+    print(target_box,target_vector)
+
+    # rospy.init_node("detect")
+    # target_point = PointStamped()
+    # target_point.header.frame_id = "head_rgbd_sensor_link"
+    # target_point.header.stamp = rospy.Time.now()
+    # target_point.point.x = target_vector[0]
+    # target_point.point.y = target_vector[1]
+    # target_point.point.z = target_vector[2]
+    # buffer = tf2_ros.Buffer()
+    # listener = tf2_ros.TransformListener(buffer)
+    # while True:
+    #     point_target = buffer.transform(target_point,"map")
+    #     print(point_target)
+
+    broadcaster = tf2_ros.TransformBroadcaster()
+    tfs = TransformStamped()
+    tfs.header.frame_id = "head_rgbd_sensor_link"
+    tfs.header.stamp = rospy.Time.now()
+    tfs.child_frame_id = "target"
+    tfs.transform.translation.x = target_vector[0]
+    tfs.transform.translation.y = target_vector[1]
+    tfs.transform.translation.z = target_vector[2]
+    qtn = tf.transformations.quaternion_from_euler(0,0,0)
+    tfs.transform.rotation.x = qtn[0]
+    tfs.transform.rotation.y = qtn[1]
+    tfs.transform.rotation.z = qtn[2]
+    tfs.transform.rotation.w = qtn[3]
+
+    broadcaster.sendTransform(tfs)
+    rospy.spin()
+
+
+    
