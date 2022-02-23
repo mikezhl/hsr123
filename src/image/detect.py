@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 
 from get_image import get_image
+from get_distance import get_distance
 
 def format_yolov5(frame):
         row, col, _ = frame.shape
@@ -12,7 +13,7 @@ def format_yolov5(frame):
 def detect(target_id,debug=0):
     c=0.01
     # Load the model and feed a 640x640 image to get predictions
-    net = cv2.dnn.readNet('yolov5s.onnx')
+    net = cv2.dnn.readNet('yolo_models/yolov5s.onnx')
     image = get_image()
     input_image = format_yolov5(image) # making the image square
     blob = cv2.dnn.blobFromImage(input_image , 1/255.0, (640, 640), swapRB=True)
@@ -46,7 +47,7 @@ def detect(target_id,debug=0):
                 box = np.array([left, top, width, height])
                 boxes.append(box)
     class_list = []
-    with open("classes.txt", "r") as f:
+    with open("yolo_models/classes.txt", "r") as f:
         class_list = [cname.strip() for cname in f.readlines()]
     indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0, 0)
     result_class_ids = []
@@ -74,8 +75,10 @@ def detect(target_id,debug=0):
             cv2.putText(image, class_list[class_id], (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,0))
         cv2.imshow("output", image)
         cv2.waitKey()
-    else:
-        return target_list
+    target_box = target_list[0][1]
+    target_distance = get_distance(target_box)
+    print(target_box,target_distance)
+
 
 if __name__ == '__main__':
     detect(41,1)
