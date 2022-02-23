@@ -19,7 +19,7 @@ def my_transform_can(rotation):
     while True:
         try:
             can_abs = tfBuffer.lookup_transform("map","tag_0", rospy.Time())
-            if n<11:
+            if n<11: # Measure 10 times for average
                 x += can_abs.transform.translation.x
                 y += can_abs.transform.translation.y
                 z += can_abs.transform.translation.z
