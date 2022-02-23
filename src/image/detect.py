@@ -3,6 +3,7 @@ import cv2
 
 from get_image import get_image
 from get_distance import get_distance
+from get_xyz import get_xyz
 
 def format_yolov5(frame):
         row, col, _ = frame.shape
@@ -55,7 +56,7 @@ def detect(target_id,debug=0):
     result_boxes = []
     target_list = []
     for i in indexes:
-        print("Class: ",class_ids[i]," Confidence: ",confidences[i]," Position: ",boxes[i])
+        # print("Class: ",class_ids[i]," Confidence: ",confidences[i]," Position: ",boxes[i])
         result_confidences.append(confidences[i])
         result_class_ids.append(class_ids[i])
         result_boxes.append(boxes[i])
@@ -77,7 +78,7 @@ def detect(target_id,debug=0):
         
     target_box = target_list[0][1]
     target_distance = get_distance(target_box,1)
-
+    
 
 
     print(target_box,target_distance)
