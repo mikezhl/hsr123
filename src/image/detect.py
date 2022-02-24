@@ -1,5 +1,7 @@
 import numpy as np
 import cv2
+import signal
+from pyexotica.publish_trajectory import sig_int_handler
 import rospy
 import tf2_ros
 import tf
@@ -70,7 +72,7 @@ def detect(target_id,debug=0):
     if len(target_list)==0:
         print("Target not found")
     else:
-        print("Target reuslt:\n",target_list)
+        print("Target reuslt list:\n",target_list)
     # Plot the result
     if debug:
         for i in range(len(result_class_ids)):
@@ -91,7 +93,7 @@ if __name__ == '__main__':
     target_distance = get_distance(target_box)
     target_direction = np.array(get_xyz(target_box))
     target_vector = target_direction*target_distance
-    print(target_box,target_vector)
+    print("Target details: ",target_box,target_vector,target_distance)
 
     # rospy.init_node("detect")
     # target_point = PointStamped()
@@ -109,7 +111,6 @@ if __name__ == '__main__':
     broadcaster = tf2_ros.TransformBroadcaster()
     tfs = TransformStamped()
     tfs.header.frame_id = "head_rgbd_sensor_link"
-    tfs.header.stamp = rospy.Time.now()
     tfs.child_frame_id = "target"
     tfs.transform.translation.x = target_vector[0]
     tfs.transform.translation.y = target_vector[1]
@@ -119,9 +120,12 @@ if __name__ == '__main__':
     tfs.transform.rotation.y = qtn[1]
     tfs.transform.rotation.z = qtn[2]
     tfs.transform.rotation.w = qtn[3]
-    rospy.sleep(1)
-    broadcaster.sendTransform(tfs)
-    rospy.spin()
+
+    signal.signal(signal.SIGINT, sig_int_handler)
+    while True:
+        tfs.header.stamp = rospy.Time.now()
+        broadcaster.sendTransform(tfs)
+        rospy.sleep(0.5)
 
 
     
