@@ -85,6 +85,7 @@ def detect(target_id,debug=0):
     return target_list
 
 def get_tfs(target_vector):
+    '''Generate the tfs needed for broadcast'''
     broadcaster = tf2_ros.TransformBroadcaster()
     tfs = TransformStamped()
     tfs.header.frame_id = "head_rgbd_sensor_link"
@@ -98,8 +99,9 @@ def get_tfs(target_vector):
     tfs.transform.rotation.z = qtn[2]
     tfs.transform.rotation.w = qtn[3]
     return broadcaster,tfs
-def broadcast_location_once(target_id):
-    rospy.init_node("get_location_once")
+def detect_broadcast_once(target_id):
+    '''Detect once and keep broadcasting'''
+    rospy.init_node("detect_broadcast_once")
     # Find vector
     target_list = detect(target_id)
     target_box = target_list[0][1]
@@ -114,9 +116,9 @@ def broadcast_location_once(target_id):
         tfs.header.stamp = rospy.Time.now()
         broadcaster.sendTransform(tfs)
         rospy.sleep(0.2)
-
-def broadcast_location(target_id):
-    rospy.init_node("get_location")
+def detect_broadcast(target_id):
+    '''Keep detecting and broadcasting'''
+    rospy.init_node("detect_broadcast")
     signal.signal(signal.SIGINT, sig_int_handler)
     while True:
         # Find vector
@@ -139,7 +141,7 @@ def broadcast_location(target_id):
             continue
 
 if __name__ == '__main__':
-    broadcast_location_once(41)
+    detect_broadcast(41)
 
     # rospy.init_node("detect")
     # target_point = PointStamped()
