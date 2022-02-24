@@ -84,16 +84,7 @@ def detect(target_id,debug=0):
         cv2.imshow("output", image)
     return target_list
 
-def broadcast_location_once(target_id):
-    rospy.init_node("get_location_once")
-    # Find vector
-    target_list = detect(target_id)
-    target_box = target_list[0][1]
-    target_distance = get_distance(target_box)
-    target_direction = np.array(get_xyz(target_box))
-    target_vector = target_direction*target_distance
-    # print("Target details: ",target_box,target_vector,target_distance)
-    # Broadcast it
+def get_tfs(target_vector):
     broadcaster = tf2_ros.TransformBroadcaster()
     tfs = TransformStamped()
     tfs.header.frame_id = "head_rgbd_sensor_link"
@@ -106,7 +97,18 @@ def broadcast_location_once(target_id):
     tfs.transform.rotation.y = qtn[1]
     tfs.transform.rotation.z = qtn[2]
     tfs.transform.rotation.w = qtn[3]
-
+    return broadcaster,tfs
+def broadcast_location_once(target_id):
+    rospy.init_node("get_location_once")
+    # Find vector
+    target_list = detect(target_id)
+    target_box = target_list[0][1]
+    target_distance = get_distance(target_box)
+    target_direction = np.array(get_xyz(target_box))
+    target_vector = target_direction*target_distance
+    # print("Target details: ",target_box,target_vector,target_distance)
+    # Broadcast it
+    broadcaster,tfs = get_tfs(target_vector)
     signal.signal(signal.SIGINT, sig_int_handler)
     while True:
         tfs.header.stamp = rospy.Time.now()
@@ -128,18 +130,7 @@ def broadcast_location(target_id):
         target_vector = target_direction*target_distance
         # print("Target details: ",target_box,target_vector,target_distance)
         # Broadcast it
-        broadcaster = tf2_ros.TransformBroadcaster()
-        tfs = TransformStamped()
-        tfs.header.frame_id = "head_rgbd_sensor_link"
-        tfs.child_frame_id = "target"
-        tfs.transform.translation.x = target_vector[0]
-        tfs.transform.translation.y = target_vector[1]
-        tfs.transform.translation.z = target_vector[2]
-        qtn = tf.transformations.quaternion_from_euler(0,0,0)
-        tfs.transform.rotation.x = qtn[0]
-        tfs.transform.rotation.y = qtn[1]
-        tfs.transform.rotation.z = qtn[2]
-        tfs.transform.rotation.w = qtn[3]
+        broadcaster,tfs = get_tfs(target_vector)
         tfs.header.stamp = rospy.Time.now()
         rospy.sleep(0.2)
         try:
@@ -148,7 +139,7 @@ def broadcast_location(target_id):
             continue
 
 if __name__ == '__main__':
-    broadcast_location(41)
+    broadcast_location_once(41)
 
     # rospy.init_node("detect")
     # target_point = PointStamped()
