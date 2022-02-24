@@ -12,13 +12,17 @@ from get_image import get_image
 from get_distance import get_distance
 from get_xyz import get_xyz
 
+# Do init_node before using detect
+
 def format_yolov5(frame):
-        row, col, _ = frame.shape
-        _max = max(col, row)
-        result = np.zeros((_max, _max, 3), np.uint8)
-        result[0:row, 0:col] = frame
-        return result
+    '''Return the image in the format required by yolov5'''
+    row, col, _ = frame.shape
+    _max = max(col, row)
+    result = np.zeros((_max, _max, 3), np.uint8)
+    result[0:row, 0:col] = frame
+    return result
 def detect(target_id,debug=0):
+    '''Detect the object with the target_id in classes.txt'''
     c=0.01
     # Load the model and feed a 640x640 image to get predictions
     net = cv2.dnn.readNet('yolo_models/yolov5s.onnx')
@@ -69,10 +73,10 @@ def detect(target_id,debug=0):
         result_boxes.append(boxes[i])
         if class_ids[i] == target_id:
             target_list.append([confidences[i],boxes[i]])
-    if len(target_list)==0:
-        print("Target not found")
-    else:
-        print("Target reuslt list:\n",target_list)
+    # if len(target_list)==0:
+    #     print("Target not found")
+    # else:
+    #     print("Target reuslt list: ",target_list)
     # Plot the result
     if debug:
         for i in range(len(result_class_ids)):
@@ -83,6 +87,47 @@ def detect(target_id,debug=0):
             cv2.putText(image, class_list[class_id], (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,0))
         cv2.imshow("output", image)
     return target_list
+def get_vector(target_list):
+    '''Return the vector from the camera to the object'''
+    target_box = target_list[0][1]
+    target_distance = get_distance(target_box)
+    target_direction = np.array(get_xyz(target_box))
+    return target_direction*target_distance
+def detect_around_calibrated(target_id):
+    '''Look around, find the object, return the postion in [x,y,z]'''
+    import hsrb_interface
+    robot = hsrb_interface.Robot()
+    whole_body = robot.get('whole_body')
+    print("Start detecting around")
+    for i in [0,np.pi/4,np.pi/2,-np.pi/4,-np.pi/2,-np.pi/4*3,-np.pi,-3.839]:
+        print("Detecting angle: ", i)
+        whole_body.move_to_joint_positions({"head_tilt_joint":0,'head_pan_joint': i})
+        rospy.sleep(3)
+        target_list = detect(target_id)
+        if len(target_list)!=0:
+            print("Found")
+            break
+    target_vector = get_vector(target_list)
+    yaw = np.arctan2(target_vector[0],target_vector[2])
+    pitch = np.arctan2(-target_vector[1],np.sqrt(target_vector[0]**2+target_vector[2]**2))
+    robot = hsrb_interface.Robot()
+    whole_body = robot.get('whole_body')
+    current_pose = whole_body.joint_state.position[9:11]
+    whole_body.move_to_joint_positions({'head_pan_joint': float(current_pose[0])-yaw,"head_tilt_joint":float(current_pose[1])+pitch})
+
+    target_vector = get_vector(detect(41))
+    target_point = PointStamped()
+    target_point.header.frame_id = "head_rgbd_sensor_link"
+    target_point.point.x = target_vector[0]
+    target_point.point.y = target_vector[1]
+    target_point.point.z = target_vector[2]
+    buffer = tf2_ros.Buffer()
+    listener = tf2_ros.TransformListener(buffer)
+    rospy.sleep(0.2)
+    target_point.header.stamp = rospy.Time.now()
+    rospy.sleep(0.2)
+    point_target = buffer.transform(target_point,"map")
+    return [point_target.point.x,point_target.point.y,point_target.point.z]
 
 def get_tfs(target_vector):
     '''Generate the tfs needed for broadcast'''
@@ -99,15 +144,17 @@ def get_tfs(target_vector):
     tfs.transform.rotation.z = qtn[2]
     tfs.transform.rotation.w = qtn[3]
     return broadcaster,tfs
-def detect_broadcast_once(target_id):
-    '''Detect once and keep broadcasting'''
-    rospy.init_node("detect_broadcast_once")
+def detect_once_broadcast(target_id,times=1):
+    '''Detect once (repeat "times" times if not found) and keep broadcasting'''
     # Find vector
-    target_list = detect(target_id)
-    target_box = target_list[0][1]
-    target_distance = get_distance(target_box)
-    target_direction = np.array(get_xyz(target_box))
-    target_vector = target_direction*target_distance
+    for i in range(times):
+        target_list = detect(target_id)
+        if len(target_list)!=0:
+            break
+        rospy.sleep(0.3)
+    if len(target_list)==0:
+        return
+    target_vector = get_vector(target_list)
     # print("Target details: ",target_box,target_vector,target_distance)
     # Broadcast it
     broadcaster,tfs = get_tfs(target_vector)
@@ -118,7 +165,6 @@ def detect_broadcast_once(target_id):
         rospy.sleep(0.2)
 def detect_broadcast(target_id):
     '''Keep detecting and broadcasting'''
-    rospy.init_node("detect_broadcast")
     signal.signal(signal.SIGINT, sig_int_handler)
     while True:
         # Find vector
@@ -126,10 +172,7 @@ def detect_broadcast(target_id):
         if len(target_list)==0:
             rospy.sleep(0.2)
             continue
-        target_box = target_list[0][1]
-        target_distance = get_distance(target_box)
-        target_direction = np.array(get_xyz(target_box))
-        target_vector = target_direction*target_distance
+        target_vector = get_vector(target_list)
         # print("Target details: ",target_box,target_vector,target_distance)
         # Broadcast it
         broadcaster,tfs = get_tfs(target_vector)
@@ -141,21 +184,5 @@ def detect_broadcast(target_id):
             continue
 
 if __name__ == '__main__':
-    detect_broadcast(41)
-
-    # rospy.init_node("detect")
-    # target_point = PointStamped()
-    # target_point.header.frame_id = "head_rgbd_sensor_link"
-    # target_point.header.stamp = rospy.Time.now()
-    # target_point.point.x = target_vector[0]
-    # target_point.point.y = target_vector[1]
-    # target_point.point.z = target_vector[2]
-    # buffer = tf2_ros.Buffer()
-    # listener = tf2_ros.TransformListener(buffer)
-    # while True:
-    #     point_target = buffer.transform(target_point,"map")
-    #     print(point_target)
-
-
-
-    
+    rospy.init_node("detect")
+    print(detect_around_calibrated(41))
