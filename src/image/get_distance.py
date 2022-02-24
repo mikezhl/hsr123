@@ -4,7 +4,6 @@ from cv_bridge import CvBridge
 import cv2
 
 def get_distance(box,debug=0):
-    rospy.init_node("detect")
     image_message = rospy.wait_for_message("/hsrb/head_rgbd_sensor/depth_registered/image",Image)
     middle = [int(box[0]+box[2]/2),int(box[1]+box[3]/2)]
     bridge = CvBridge()

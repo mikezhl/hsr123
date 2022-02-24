@@ -84,6 +84,7 @@ def detect(target_id,debug=0):
 
 
 if __name__ == '__main__':
+    rospy.init_node("detect")
     target_list = detect(41)
 
     target_box = target_list[0][1]
@@ -118,7 +119,7 @@ if __name__ == '__main__':
     tfs.transform.rotation.y = qtn[1]
     tfs.transform.rotation.z = qtn[2]
     tfs.transform.rotation.w = qtn[3]
-
+    rospy.sleep(1)
     broadcaster.sendTransform(tfs)
     rospy.spin()
 
