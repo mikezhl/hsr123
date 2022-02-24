@@ -36,14 +36,14 @@
         args="-file $(find hsr123)/models/table/model.sdf -sdf -x $(arg table_x) -y $(arg table_y) -model table" />
   <arg name="bottle_x1" default="0.9" />
   <arg name="bottle_x2" default="0.7" />
-  <arg name="bottle_x3" default="1.1" />
+  <arg name="bottle_x3" default="1.2" />
   <arg name="bottle_y" default="-0.4" />
   <arg name="bottle_z" default="0.8" />
   <arg name="bottle_Y" default="2.5" />
-  <node name="spawn_bottle1" pkg="gazebo_ros" type="spawn_model"
+  <!-- <node name="spawn_bottle1" pkg="gazebo_ros" type="spawn_model"
         args="-file $(find hsr123)/models/hsr_coke/model.sdf -sdf -x $(arg bottle_x1) -y $(arg bottle_y) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle1" />
   <node name="spawn_bottle2" pkg="gazebo_ros" type="spawn_model"
-        args="-file $(find hsr123)/models/hsr_coke/model.sdf -sdf -x $(arg bottle_x2) -y $(arg bottle_y) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle2" />
+        args="-file $(find hsr123)/models/hsr_coke/model.sdf -sdf -x $(arg bottle_x2) -y $(arg bottle_y) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle2" /> -->
   <node name="spawn_bottle3" pkg="gazebo_ros" type="spawn_model"
         args="-file $(find hsr123)/models/hsr_coke/model.sdf -sdf -x $(arg bottle_x3) -y $(arg bottle_y) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle3" />
 </launch>

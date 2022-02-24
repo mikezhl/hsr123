@@ -84,30 +84,16 @@ def detect(target_id,debug=0):
         cv2.imshow("output", image)
     return target_list
 
-
-if __name__ == '__main__':
-    rospy.init_node("detect")
-    target_list = detect(41)
-
+def get_location_once(target_id):
+    rospy.init_node("get_location_once")
+    # Find vector
+    target_list = detect(target_id)
     target_box = target_list[0][1]
     target_distance = get_distance(target_box)
     target_direction = np.array(get_xyz(target_box))
     target_vector = target_direction*target_distance
-    print("Target details: ",target_box,target_vector,target_distance)
-
-    # rospy.init_node("detect")
-    # target_point = PointStamped()
-    # target_point.header.frame_id = "head_rgbd_sensor_link"
-    # target_point.header.stamp = rospy.Time.now()
-    # target_point.point.x = target_vector[0]
-    # target_point.point.y = target_vector[1]
-    # target_point.point.z = target_vector[2]
-    # buffer = tf2_ros.Buffer()
-    # listener = tf2_ros.TransformListener(buffer)
-    # while True:
-    #     point_target = buffer.transform(target_point,"map")
-    #     print(point_target)
-
+    # print("Target details: ",target_box,target_vector,target_distance)
+    # Broadcast it
     broadcaster = tf2_ros.TransformBroadcaster()
     tfs = TransformStamped()
     tfs.header.frame_id = "head_rgbd_sensor_link"
@@ -125,7 +111,58 @@ if __name__ == '__main__':
     while True:
         tfs.header.stamp = rospy.Time.now()
         broadcaster.sendTransform(tfs)
-        rospy.sleep(0.5)
+        rospy.sleep(0.2)
+
+def get_location(target_id):
+    rospy.init_node("get_location")
+    signal.signal(signal.SIGINT, sig_int_handler)
+    while True:
+        # Find vector
+        target_list = detect(target_id)
+        if len(target_list)==0:
+            rospy.sleep(0.2)
+            continue
+        target_box = target_list[0][1]
+        target_distance = get_distance(target_box)
+        target_direction = np.array(get_xyz(target_box))
+        target_vector = target_direction*target_distance
+        # print("Target details: ",target_box,target_vector,target_distance)
+        # Broadcast it
+        broadcaster = tf2_ros.TransformBroadcaster()
+        tfs = TransformStamped()
+        tfs.header.frame_id = "head_rgbd_sensor_link"
+        tfs.child_frame_id = "target"
+        tfs.transform.translation.x = target_vector[0]
+        tfs.transform.translation.y = target_vector[1]
+        tfs.transform.translation.z = target_vector[2]
+        qtn = tf.transformations.quaternion_from_euler(0,0,0)
+        tfs.transform.rotation.x = qtn[0]
+        tfs.transform.rotation.y = qtn[1]
+        tfs.transform.rotation.z = qtn[2]
+        tfs.transform.rotation.w = qtn[3]
+        tfs.header.stamp = rospy.Time.now()
+        rospy.sleep(0.2)
+        try:
+            broadcaster.sendTransform(tfs)
+        except:
+            continue
+
+if __name__ == '__main__':
+    get_location(41)
+
+    # rospy.init_node("detect")
+    # target_point = PointStamped()
+    # target_point.header.frame_id = "head_rgbd_sensor_link"
+    # target_point.header.stamp = rospy.Time.now()
+    # target_point.point.x = target_vector[0]
+    # target_point.point.y = target_vector[1]
+    # target_point.point.z = target_vector[2]
+    # buffer = tf2_ros.Buffer()
+    # listener = tf2_ros.TransformListener(buffer)
+    # while True:
+    #     point_target = buffer.transform(target_point,"map")
+    #     print(point_target)
+
 
 
     
