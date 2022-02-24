@@ -12,7 +12,7 @@ def get_distance(box,debug=0):
     if debug:
         cv2.rectangle(cv_image, box, (0, 255, 255), 2)
         cv2.imshow("get_distance", cv_image)
-    return distance
+    return distance+0.02 # Radius of the can
 
 if __name__ == '__main__':
     box = [541, 311,  43,  78]
