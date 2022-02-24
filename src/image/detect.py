@@ -84,7 +84,7 @@ def detect(target_id,debug=0):
         cv2.imshow("output", image)
     return target_list
 
-def get_location_once(target_id):
+def broadcast_location_once(target_id):
     rospy.init_node("get_location_once")
     # Find vector
     target_list = detect(target_id)
@@ -113,7 +113,7 @@ def get_location_once(target_id):
         broadcaster.sendTransform(tfs)
         rospy.sleep(0.2)
 
-def get_location(target_id):
+def broadcast_location(target_id):
     rospy.init_node("get_location")
     signal.signal(signal.SIGINT, sig_int_handler)
     while True:
@@ -148,7 +148,7 @@ def get_location(target_id):
             continue
 
 if __name__ == '__main__':
-    get_location(41)
+    broadcast_location(41)
 
     # rospy.init_node("detect")
     # target_point = PointStamped()
