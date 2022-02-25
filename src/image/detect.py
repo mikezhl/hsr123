@@ -176,6 +176,7 @@ def detect_all(target_id):
                 target_list.append(xyz)
                 print("New: ",xyz)
                 broadcast_once(xyz,"map","target-"+str(len(target_list)))
+    whole_body.move_to_joint_positions({"head_tilt_joint":0,'head_pan_joint': 0})
     return target_list
 
 def get_tfs(target_vector,frame_id = "head_rgbd_sensor_link",name="target"):
