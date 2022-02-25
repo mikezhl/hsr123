@@ -72,6 +72,15 @@ def my_plot_analysis(problem,solution,scene):
     plt.title('Cost breakdown across trajectory per task')
     plt.show()
 
+def my_get_position(spawn_position):
+    import pyexotica as exo
+    from geometry_msgs.msg import PoseStamped
+    KDLFrame_spawn = exo.KDLFrame([spawn_position[0],spawn_position[1],0,0,0,spawn_position[2]])
+    base_posestamped = rospy.wait_for_message('/global_pose', PoseStamped)
+    base_pose = base_posestamped.pose
+    KDLFrame_now_rel = exo.KDLFrame([base_pose.position.x,base_pose.position.y,base_pose.position.z,base_pose.orientation.x,base_pose.orientation.y,base_pose.orientation.z,base_pose.orientation.w])
+    KDLFrame_now = KDLFrame_spawn*KDLFrame_now_rel
+    return KDLFrame_now.get_translation_and_rpy()
 def my_get_pose():
     '''Get the pose of the robot, return a dictionary'''
     from sensor_msgs.msg import JointState
