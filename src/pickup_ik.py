@@ -75,6 +75,6 @@ def pickup_ik(goal,scene_list,debug=1):
 
 
 if __name__ == '__main__':
-    scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/soda_can.scene"]
+    scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
     pickup_ik([0.1, -0.3937, 0.7941],scene_list,debug=1)
     # pickup_ik([0.9, -1, 0.9],scene_list,debug=1)

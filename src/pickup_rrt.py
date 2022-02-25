@@ -97,6 +97,6 @@ def pickup_rrt_loop(start, goal,scene_list,num=5,debug=1):
 
 
 if __name__ == '__main__':
-    scene_list=["{hsr123}/resources/meeting_room_table.scene"]
+    scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene"]
     # pickup_rrt([-1,-2,0],[ 0.9187 ,-0.0243, -2.0765],scene_list, debug=1)
-    pickup_rrt_loop([ 0.9187, -0.0243, -2.0765],[ 0.411 , -1.4464,  0.6101],scene_list,num=5)
+    pickup_rrt_loop([ 1.1491, -0.0641, -1.2076],[0.9961, 1.4072, 1.4161],scene_list_rrt,num=5)

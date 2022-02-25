@@ -113,5 +113,5 @@ def pickup_aico(can_position,traj_path,scene_list,gripper_orientation=0,debug=1,
 
 if __name__ == '__main__':
     traj_path=sys.path[0]+"/pickup_traj/base1.traj"
-    scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/soda_can.scene"]
+    scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
     pickup_aico([0.1, -0.3937, 0.7941],traj_path,scene_list,gripper_orientation=0,debug=1,doplot=0)
