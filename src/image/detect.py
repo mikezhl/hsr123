@@ -87,9 +87,9 @@ def detect(target_id,debug=0):
             cv2.putText(image, class_list[class_id], (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,0))
         cv2.imshow("output", image)
     return target_list
-def get_vector(target_list):
+def get_vector(target):
     '''Return the vector from the camera to the object'''
-    target_box = target_list[0][1]
+    target_box = target[1]
     target_distance = get_distance(target_box)
     target_direction = np.array(get_xyz(target_box))
     return target_direction*target_distance
@@ -107,7 +107,7 @@ def detect_around_calibrated(target_id):
         if len(target_list)!=0:
             print("Found")
             break
-    target_vector = get_vector(target_list)
+    target_vector = get_vector(target_list[0])
     yaw = np.arctan2(target_vector[0],target_vector[2])
     pitch = np.arctan2(-target_vector[1],np.sqrt(target_vector[0]**2+target_vector[2]**2))
     robot = hsrb_interface.Robot()
@@ -115,7 +115,7 @@ def detect_around_calibrated(target_id):
     current_pose = whole_body.joint_state.position[9:11]
     whole_body.move_to_joint_positions({'head_pan_joint': float(current_pose[0])-yaw,"head_tilt_joint":float(current_pose[1])+pitch})
 
-    target_vector = get_vector(detect(41))
+    target_vector = get_vector(detect(41)[0])
     target_point = PointStamped()
     target_point.header.frame_id = "head_rgbd_sensor_link"
     target_point.point.x = target_vector[0]
@@ -128,13 +128,62 @@ def detect_around_calibrated(target_id):
     rospy.sleep(0.2)
     point_target = buffer.transform(target_point,"map")
     return [point_target.point.x,point_target.point.y,point_target.point.z]
+def detect_all(target_id):
+    '''Look around, find the all the object in the scene, return the postion in [[x,y,z],...]'''
+    import hsrb_interface
+    robot = hsrb_interface.Robot()
+    whole_body = robot.get('whole_body')
+    print("Start detecting around")
+    target_list=[]
+    for i in [0,np.pi/4,np.pi/2,-np.pi/4,-np.pi/2,-np.pi/4*3,-np.pi,-3.839]:
+        print("Detecting angle: ", i)
+        whole_body.move_to_joint_positions({"head_tilt_joint":0,'head_pan_joint': i})
+        rospy.sleep(3)
+        temp_list = detect(target_id)
+        # print("For angle ",i,"there are: ",temp_list)
+        current_pose = whole_body.joint_state.position[9:11]
+        for temp_target in temp_list:
+            target_vector = get_vector(temp_target)
+            yaw = np.arctan2(target_vector[0],target_vector[2])
+            pitch = np.arctan2(-target_vector[1],np.sqrt(target_vector[0]**2+target_vector[2]**2))
+            robot = hsrb_interface.Robot()
+            whole_body = robot.get('whole_body')
+            whole_body.move_to_joint_positions({'head_pan_joint': float(current_pose[0])-yaw,"head_tilt_joint":float(current_pose[1])+pitch})
+            temp_temp_target_list = detect(41)
+            for temp_temp_target in temp_temp_target_list:
+                temp_target_vector = get_vector(temp_temp_target)
+                if abs(temp_target_vector[0])<0.1 and abs(temp_target_vector[1])<0.1:
+                    target_vector = temp_target_vector
+            target_point = PointStamped()
+            target_point.header.frame_id = "head_rgbd_sensor_link"
+            target_point.point.x = target_vector[0]
+            target_point.point.y = target_vector[1]
+            target_point.point.z = target_vector[2]
+            buffer = tf2_ros.Buffer()
+            listener = tf2_ros.TransformListener(buffer)
+            rospy.sleep(0.2)
+            target_point.header.stamp = rospy.Time.now()
+            rospy.sleep(0.2)
+            point_target = buffer.transform(target_point,"map")
+            xyz = [point_target.point.x,point_target.point.y,point_target.point.z]
+            new=1
+            for exist in target_list:
+                dis = np.sum((np.array(xyz)-np.array(exist))**2)**0.5
+                if dis<0.05:
+                    new=0
+                    break
+            if new:
+                target_list.append(xyz)
+                print("New: ",xyz)
+                broadcast_once(xyz,"map","target-"+str(len(target_list)))
+    return target_list
 
-def get_tfs(target_vector):
+def get_tfs(target_vector,frame_id = "head_rgbd_sensor_link",name="target"):
     '''Generate the tfs needed for broadcast'''
     broadcaster = tf2_ros.TransformBroadcaster()
     tfs = TransformStamped()
-    tfs.header.frame_id = "head_rgbd_sensor_link"
-    tfs.child_frame_id = "target"
+    tfs.header.frame_id = frame_id
+    tfs.child_frame_id = name
     tfs.transform.translation.x = target_vector[0]
     tfs.transform.translation.y = target_vector[1]
     tfs.transform.translation.z = target_vector[2]
@@ -154,7 +203,7 @@ def detect_once_broadcast(target_id,times=1):
         rospy.sleep(0.3)
     if len(target_list)==0:
         return
-    target_vector = get_vector(target_list)
+    target_vector = get_vector(target_list[0])
     # print("Target details: ",target_box,target_vector,target_distance)
     # Broadcast it
     broadcaster,tfs = get_tfs(target_vector)
@@ -172,7 +221,7 @@ def detect_broadcast(target_id):
         if len(target_list)==0:
             rospy.sleep(0.2)
             continue
-        target_vector = get_vector(target_list)
+        target_vector = get_vector(target_list[0])
         # print("Target details: ",target_box,target_vector,target_distance)
         # Broadcast it
         broadcaster,tfs = get_tfs(target_vector)
@@ -182,7 +231,14 @@ def detect_broadcast(target_id):
             broadcaster.sendTransform(tfs)
         except:
             continue
+def broadcast_once(target_vector,frame_id,name):
+    '''Broadcast a point for 1 sec for debug'''
+    broadcaster,tfs = get_tfs(target_vector,frame_id,name)
+    for i in range(10):
+        tfs.header.stamp = rospy.Time.now()
+        broadcaster.sendTransform(tfs)
+        rospy.sleep(0.1)
 
 if __name__ == '__main__':
     rospy.init_node("detect")
-    print(detect_around_calibrated(41))
+    print(detect_all(41))
