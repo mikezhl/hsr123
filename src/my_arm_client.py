@@ -59,8 +59,9 @@ def done_cb_arm_pickup(state, result):
     # print('[DONE_ARM] the result is: '+str(result))
     if state == 3:
         # print('[ARM FINISHED]')
-        n = int(rospy.get_param("pickup_status"))+1
-        rospy.set_param('pickup_status', n)
+        from std_srvs.srv import Empty
+        client = rospy.ServiceProxy('Increment', Empty)
+        client()
         return
     else:
         print('Issue arose, shutting down')
@@ -72,7 +73,6 @@ def prepare_aico(arm_list,dt):
     return p_arm_list
 # Send the TrajectoryPoint list to the arm action client used in pickup
 def load_arm_goal_pickup(p_arm_list,cli_arm):
-    rospy.set_param('status_check', 0)
     goal_arm = control_msgs.msg.FollowJointTrajectoryGoal()
     traj_arm = trajectory_msgs.msg.JointTrajectory()
     traj_arm.joint_names = ["arm_lift_joint", "arm_flex_joint",

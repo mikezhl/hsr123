@@ -59,8 +59,9 @@ def done_cb_base_pickup(state, result):
     # print('[DONE_BASE] the result is: '+str(result))
     if state == 3:
         # print('[BASE FINISHED]')
-        n = int(rospy.get_param("pickup_status"))+1
-        rospy.set_param('pickup_status', n)
+        from std_srvs.srv import Empty
+        client = rospy.ServiceProxy('Increment', Empty)
+        client()
         return
     else:
         print('Issue arose, shutting down')
