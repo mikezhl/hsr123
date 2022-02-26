@@ -15,7 +15,7 @@ import my_base_client as base
 
 # Settings
 gazebo=1
-dt=0.1
+dt=0.15
 vel_limit = 0.05
 # Position where the robot is spawned, set in launch file "robot_pos", [x,y,Y]
 spawn_position = [0,0,0]
@@ -25,6 +25,7 @@ end_position = spawn_position
 place_position = [1,2,0.7]
 scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene"]
 scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
+rospy.init_node("YOLO")
 
 # Init
 if gazebo:
@@ -38,8 +39,10 @@ if gazebo:
     cli_arm, cli_base = my_Simple_Action_Clients()
     client_all = [cli_arm, cli_base, whole_body, hsrb_gripper]
     print("Looking for all the can")
-    # can_position_list = detect_all(41)
-# else:
+    can_position_list = detect_all(41)
+    # can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
+
+else:
     can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
 
 # A basic loop
@@ -55,11 +58,7 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
     traj_rrt2_full = pickup_rrt_loop(base_for_pickup[0:3],base_for_place[0:3],scene_list_rrt,num=5,debug=0)
     if end[1]:
         base_for_end = pickup_ik(end[0],scene_list,debug=0)
-        traj_end = pickup_rrt_loop(base_for_place[0:3],base_for_end[0:3],scene_list_rrt,num=5,debug=0)
-        mid = int(len(traj_end)/2)
-        traj_rrt3_full = traj_end[0:mid,:]
-        next_start = traj_end[mid-1,0:3]
-        print(num,": The next start ponit is: ", next_start)
+        traj_rrt3_full = pickup_rrt_loop(base_for_place[0:3],base_for_end[0:3],scene_list_rrt,num=5,debug=0)
     else:
         traj_rrt3_full = pickup_rrt_loop(base_for_place[0:3],end[0],scene_list_rrt,num=5,debug=0)
         next_start=0
@@ -67,6 +66,9 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
     traj_rrt2,traj_rrt3 = find_aico_point(traj_rrt21,traj_rrt3_full,0.25,base_for_place,0.5)
     aico_start1,aico_end1 = traj_rrt1[-1,:],traj_rrt21[0,:]
     aico_start2,aico_end2 = traj_rrt2[-1,:],traj_rrt3[0,:]
+    if end[1]:
+        next_start = aico_end2
+        traj_rrt3=[]
 
     # Change the orientation of the path for better grasping
     start_orientation1 = math.atan2(pick[1]-aico_start1[1],pick[0]-aico_start1[0])
@@ -110,12 +112,15 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
 
     # Move in RViz
     if debug:
+        print("ALL DONE, Looping the solution in RViz")
         arm_traj = [0,0,-np.pi/2,-np.pi/2,0]
         traj_rrt1 = np.concatenate((traj_rrt1,np.resize(arm_traj,(len(traj_rrt1),5))), axis=1)
         traj_rrt2 = np.concatenate((traj_rrt2,np.resize(arm_traj,(len(traj_rrt2),5))), axis=1)
-        traj_rrt3 = np.concatenate((traj_rrt3,np.resize(arm_traj,(len(traj_rrt3),5))), axis=1)
-        print("ALL DONE, Looping the solution in RViz")
-        my_pickup(np.concatenate((traj_rrt1,traj_aico1,traj_rrt2,traj_aico2,traj_rrt3), axis=0),pick,scene_list)
+        if len(traj_rrt3)>0:
+            traj_rrt3 = np.concatenate((traj_rrt3,np.resize(arm_traj,(len(traj_rrt3),5))), axis=1)
+            my_pickup(np.concatenate((traj_rrt1,traj_aico1,traj_rrt2,traj_aico2,traj_rrt3), axis=0),pick,scene_list)
+        else:
+            my_pickup(np.concatenate((traj_rrt1,traj_aico1,traj_rrt2,traj_aico2), axis=0),pick,scene_list)
     print(num,": Planning done")
     return [traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2],next_start
     
@@ -157,9 +162,10 @@ def follow(num,traj,spawn_position,client,dt,vel_limit):
     base_list = base_list[1::]
     p_base_list_4 = base.prepare_aico(base_list,dt)
     # Constrct base list of rrt part3
-    print(num,": Constrcting TrajectoryPoint list for  rrt part3")
-    base_list = np.array([my_traj_transform(traj_rrt3[i], KDLFrame_startbase) for i in range(len(traj_rrt3))])
-    p_base_list_5 = base.prepare_rrt(base_list,vel_limit)
+    if len(traj_rrt3)>0:
+        print(num,": Constrcting TrajectoryPoint list for  rrt part3")
+        base_list = np.array([my_traj_transform(traj_rrt3[i], KDLFrame_startbase) for i in range(len(traj_rrt3))])
+        p_base_list_5 = base.prepare_rrt(base_list,vel_limit)
     
     # Run!!
     rospy.set_param('pickup_status', 0)
@@ -189,46 +195,55 @@ def follow(num,traj,spawn_position,client,dt,vel_limit):
     while rospy.get_param("pickup_status")<6:
         rospy.sleep(0.5)
 
-    print(num,": Loading base goal5")
-    base.load_base_goal_pickup(p_base_list_5,cli_base)
-    while rospy.get_param("pickup_status")==6:
-        rospy.sleep(0.5)
+    if len(traj_rrt3)>0:
+        print(num,": Loading base goal5")
+        base.load_base_goal_pickup(p_base_list_5,cli_base)
+        while rospy.get_param("pickup_status")==6:
+            rospy.sleep(0.5)
 
     print(num,": All Done :)")
 
-for i in range(len(can_position_list)):
-    if i==(len(can_position_list)-1):
-        end = [end_position,0]
-    else:
-        end = [can_position_list[i+1],1]
-    traj,start_position = plan(i,scene_list,scene_list_rrt,start_position,can_position_list[i],place_position,end,plot=0,debug=1-gazebo)
-    follow(i,traj,spawn_position,client_all,dt,vel_limit)
-
-
+# Multithreading version=================================================================================
 # yolo = threading.Thread(target=follow)
 # for i in range(len(can_position_list)):
 #     if i==(len(can_position_list)-1):
 #         end = [end_position,0]
 #     else:
 #         end = [can_position_list[i+1],1]
-#     traj,start_position = plan(i,scene_list,scene_list_rrt,start_position,can_position_list[i],place_position,end,plot=0,debug=1-gazebo)
+#     traj,start_position = plan(str(i)+"-PLANNING",scene_list,scene_list_rrt,start_position,can_position_list[i],place_position,end,plot=0,debug=1-gazebo)
 #     while True:
 #         if yolo.is_alive():
 #             rospy.sleep(1)
 #         else:
 #             break
-#     yolo = threading.Thread(target=follow,args=[i,traj,spawn_position,client_all,dt,vel_limit])
+#     yolo = threading.Thread(target=follow,args=[str(i)+"-PLANNING",traj,spawn_position,client_all,dt,vel_limit])
 #     yolo.start()
 
+# Normal version========================================================================================
+traj_all=[]
+for i in range(len(can_position_list)):
+    if i==(len(can_position_list)-1):
+        end = [end_position,0]
+    else:
+        end = [can_position_list[i+1],1]
+    traj,start_position = plan(str(i)+"-PLANNING",scene_list,scene_list_rrt,start_position,can_position_list[i],place_position,end,plot=0,debug=1-gazebo)
+    traj_all.append(traj)
+for i in range(len(traj_all)):
+    follow(str(i)+"-RUNNING",traj_all[i],spawn_position,client_all,dt,vel_limit)
 
 
-# yolo = Thread(target=follow,args=[traj,spawn_position,client_all,dt,vel_limit])
-# traj1,next_start = plan(scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=0,debug=1-gazebo)
-# traj2,next_start = plan(scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=0,debug=1-gazebo)
-# traj3,next_start = plan(scene_list,scene_list_rrt,next_start,can_position_list[2],place_position,[end_position,0],plot=0,debug=1-gazebo)
+# Debug version========================================================================================
+# traj1,next_start = plan(1,scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=0,debug=1-gazebo)
+# traj2,next_start = plan(2,scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=0,debug=1-gazebo)
+# traj3,next_start = plan(3,scene_list,scene_list_rrt,next_start,can_position_list[2],place_position,[end_position,0],plot=0,debug=1-gazebo)
+# import pickle
+# pickle.dump(traj1, open('pickle/traj1.pkl', 'wb'))
+# pickle.dump(traj2, open('pickle/traj2.pkl', 'wb'))
+# pickle.dump(traj3, open('pickle/traj3.pkl', 'wb'))
+# traj1=pickle.load(open('pickle/traj1.pkl', 'rb'))
+# traj2=pickle.load(open('pickle/traj2.pkl', 'rb'))
+# traj3=pickle.load(open('pickle/traj3.pkl', 'rb'))
+# follow(1,traj1,spawn_position,client_all,dt,vel_limit)
+# follow(2,traj2,spawn_position,client_all,dt,vel_limit)
+# follow(3,traj3,spawn_position,client_all,dt,vel_limit)
 
-# follow(traj1,spawn_position,client_all,dt,vel_limit)
-
-# follow(traj2,spawn_position,client_all,dt,vel_limit)
-
-# follow(traj3,spawn_position,client_all,dt,vel_limit)
