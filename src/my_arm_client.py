@@ -6,6 +6,7 @@ import trajectory_msgs.msg
 
 # Three callback functions for the arm action client
 def active_cb_arm():
+    return
     print('[ACTIVE_ARM] arm goal active')
 def feedback_cb_arm(feedback):
     return
@@ -57,7 +58,7 @@ def done_cb_arm_pickup(state, result):
     # print('[DONE_ARM] the state is: '+str(state))
     # print('[DONE_ARM] the result is: '+str(result))
     if state == 3:
-        print('[ARM FINISHED]')
+        # print('[ARM FINISHED]')
         n = int(rospy.get_param("pickup_status"))+1
         rospy.set_param('pickup_status', n)
         return

@@ -6,6 +6,7 @@ import trajectory_msgs.msg
 
 # Three callback functions for the arm action client
 def active_cb_base():
+    return
     print('[ACTIVE_BASE] goal active')
 def feedback_cb_base(feedback):
     return
@@ -54,10 +55,10 @@ def load_base_goal(base_list,cli_base,dt):
 
 # Callback functions for the base action client used in pickup
 def done_cb_base_pickup(state, result):
-    print('[DONE_BASE] the state is: '+str(state))
-    print('[DONE_BASE] the result is: '+str(result))
+    # print('[DONE_BASE] the state is: '+str(state))
+    # print('[DONE_BASE] the result is: '+str(result))
     if state == 3:
-        print('[BASE FINISHED]')
+        # print('[BASE FINISHED]')
         n = int(rospy.get_param("pickup_status"))+1
         rospy.set_param('pickup_status', n)
         return

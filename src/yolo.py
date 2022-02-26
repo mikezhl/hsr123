@@ -3,6 +3,7 @@ import math
 import sys
 import hsrb_interface
 import pyexotica as exo
+import threading
 
 from pickup_ik import pickup_ik
 from pickup_rrt import pickup_rrt_loop
@@ -14,7 +15,7 @@ import my_base_client as base
 
 # Settings
 gazebo=1
-dt=0.15
+dt=0.1
 vel_limit = 0.05
 # Position where the robot is spawned, set in launch file "robot_pos", [x,y,Y]
 spawn_position = [0,0,0]
@@ -42,16 +43,26 @@ if gazebo:
     can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
 
 # A basic loop
-def plan(scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
+def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
+    '''end[0] is the end position, end[1] is the type of the end (0:xyz 1:xyz)'''
     # Find the base trajectory and find the start and end for AICO pickup
-    print("===Finding the base trajectory and the start and end for AICO pickup")
+    print(num,": ===Finding the base trajectory and the start and end for AICO pickup")
     base_for_pickup = pickup_ik(pick,scene_list,debug=0)
+    print(num,": From pickup_ik, base_for_pickup: ",base_for_pickup[0:3])
     base_for_place = pickup_ik(place,scene_list,debug=0)
-    print("From pickup_ik, base_for_pickup: ",base_for_pickup[0:3])
-    print("From pickup_ik: base_for_place: ",base_for_place[0:3])
+    print(num,": From pickup_ik: base_for_place: ",base_for_place[0:3])
     traj_rrt1_full = pickup_rrt_loop(start,base_for_pickup[0:3],scene_list_rrt,num=5,debug=0)
     traj_rrt2_full = pickup_rrt_loop(base_for_pickup[0:3],base_for_place[0:3],scene_list_rrt,num=5,debug=0)
-    traj_rrt3_full = pickup_rrt_loop(base_for_place[0:3],end,scene_list_rrt,num=5,debug=0)
+    if end[1]:
+        base_for_end = pickup_ik(end[0],scene_list,debug=0)
+        traj_end = pickup_rrt_loop(base_for_place[0:3],base_for_end[0:3],scene_list_rrt,num=5,debug=0)
+        mid = int(len(traj_end)/2)
+        traj_rrt3_full = traj_end[0:mid,:]
+        next_start = traj_end[mid-1,0:3]
+        print(num,": The next start ponit is: ", next_start)
+    else:
+        traj_rrt3_full = pickup_rrt_loop(base_for_place[0:3],end[0],scene_list_rrt,num=5,debug=0)
+        next_start=0
     traj_rrt1,traj_rrt21 = find_aico_point(traj_rrt1_full,traj_rrt2_full,0.25,base_for_pickup,0.5)
     traj_rrt2,traj_rrt3 = find_aico_point(traj_rrt21,traj_rrt3_full,0.25,base_for_place,0.5)
     aico_start1,aico_end1 = traj_rrt1[-1,:],traj_rrt21[0,:]
@@ -60,15 +71,15 @@ def plan(scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
     # Change the orientation of the path for better grasping
     start_orientation1 = math.atan2(pick[1]-aico_start1[1],pick[0]-aico_start1[0])
     traj_rrt1[:,2] = np.linspace(traj_rrt1[0,2],start_orientation1,len(traj_rrt1),endpoint=True)
+    aico_start1[2]=start_orientation1
+    print(num,": From find_aico_point, start1 and end1: ", aico_start1,aico_end1)
     start_orientation2 = math.atan2(place[1]-aico_start2[1],place[0]-aico_start2[0])
     traj_rrt2[:,2] = np.linspace(traj_rrt2[0,2],start_orientation2,len(traj_rrt2),endpoint=True)
-    aico_start1[2]=start_orientation1
     aico_start2[2]=start_orientation2
-    print("From find_aico_point, start1 and end1: ", aico_start1,aico_end1)
-    print("From find_aico_point, start2 and end2: ", aico_start2,aico_end2)
+    print(num,": From find_aico_point, start2 and end2: ", aico_start2,aico_end2)
 
     # Find the base trajectory during AICO
-    print("===Finding the base trajectory during AICO")
+    print(num,": ===Finding the base trajectory during AICO")
     traj_path1=sys.path[0]+"/pickup_traj/base1.traj"
     traj_path2=sys.path[0]+"/pickup_traj/base2.traj"
     x1,y1 = my_aico_traj_new(aico_start1,aico_end1,base_for_pickup,20,traj_path1)
@@ -93,7 +104,7 @@ def plan(scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
         plt.savefig(sys.path[0]+"/pickup_traj/Trajectories.png")
         plt.show()
     
-    print("===Finding the arm and base trajectory for grasping")
+    print(num,": ===Finding the arm and base trajectory for grasping")
     traj_aico1 = pickup_aico(pick,traj_path1,scene_list,gripper_orientation=0,debug=0,doplot=0)
     traj_aico2 = pickup_aico(place,traj_path2,scene_list,gripper_orientation=0,debug=0,doplot=0)
 
@@ -105,19 +116,20 @@ def plan(scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
         traj_rrt3 = np.concatenate((traj_rrt3,np.resize(arm_traj,(len(traj_rrt3),5))), axis=1)
         print("ALL DONE, Looping the solution in RViz")
         my_pickup(np.concatenate((traj_rrt1,traj_aico1,traj_rrt2,traj_aico2,traj_rrt3), axis=0),pick,scene_list)
-    return [traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2]
+    print(num,": Planning done")
+    return [traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2],next_start
     
-def follow(traj,spawn_position,client,dt,vel_limit):
+def follow(num,traj,spawn_position,client,dt,vel_limit):
     traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2 = traj
     cli_arm, cli_base, whole_body, hsrb_gripper = client
 
     # Constrct base list of rrt part1
-    print("Constrcting TrajectoryPoint list for rrt part1")
+    print(num,": Constrcting TrajectoryPoint list for rrt part1")
     KDLFrame_startbase = exo.KDLFrame([spawn_position[0],spawn_position[1],0,0,0,spawn_position[2]])
     base_list = np.array([my_traj_transform(traj_rrt1[i], KDLFrame_startbase) for i in range(len(traj_rrt1))])
     p_base_list_1 = base.prepare_rrt(base_list,vel_limit)
     # Constrct base list of aico part1
-    print("Constrcting TrajectoryPoint list for aico part1")
+    print(num,": Constrcting TrajectoryPoint list for aico part1")
     time_list = np.arange(0.0,dt*len(traj_aico1),dt)
     arm_list = traj_aico1[:,3:8]
     arm_list = np.c_[arm_list,time_list]
@@ -129,11 +141,11 @@ def follow(traj,spawn_position,client,dt,vel_limit):
     base_list = base_list[1::]
     p_base_list_2 = base.prepare_aico(base_list,dt)
     # Constrct base list of rrt part2
-    print("Constrcting TrajectoryPoint list for  rrt part2")
+    print(num,": Constrcting TrajectoryPoint list for  rrt part2")
     base_list = np.array([my_traj_transform(traj_rrt2[i], KDLFrame_startbase) for i in range(len(traj_rrt2))])
     p_base_list_3 = base.prepare_rrt(base_list,vel_limit)
     # Constrct base list of aico part2
-    print("Constrcting TrajectoryPoint list for aico part2")
+    print(num,": Constrcting TrajectoryPoint list for aico part2")
     time_list = np.arange(0.0,dt*len(traj_aico2),dt)
     arm_list = traj_aico2[:,3:8]
     arm_list = np.c_[arm_list,time_list]
@@ -145,45 +157,78 @@ def follow(traj,spawn_position,client,dt,vel_limit):
     base_list = base_list[1::]
     p_base_list_4 = base.prepare_aico(base_list,dt)
     # Constrct base list of rrt part3
-    print("Constrcting TrajectoryPoint list for  rrt part3")
+    print(num,": Constrcting TrajectoryPoint list for  rrt part3")
     base_list = np.array([my_traj_transform(traj_rrt3[i], KDLFrame_startbase) for i in range(len(traj_rrt3))])
     p_base_list_5 = base.prepare_rrt(base_list,vel_limit)
     
     # Run!!
     rospy.set_param('pickup_status', 0)
-    print("Loading base goal1")
+    print(num,": Loading base goal1")
     base.load_base_goal_pickup(p_base_list_1,cli_base)
     while rospy.get_param("pickup_status")==0:
-        rospy.sleep(0.1)
+        rospy.sleep(0.5)
 
-    print("Loading base goal2")
+    print(num,": Loading base goal2")
     base.load_base_goal_pickup(p_base_list_2,cli_base)
     arm.load_arm_goal_pickup(p_arm_list1,cli_arm)
     rospy.sleep(4*dt/0.1)
     hsrb_gripper.apply_force(0.2, delicate = True)
     while rospy.get_param("pickup_status")<3:
-        rospy.sleep(0.1)
+        rospy.sleep(0.5)
 
-    print("Loading base goal3")
+    print(num,": Loading base goal3")
     base.load_base_goal_pickup(p_base_list_3,cli_base)
     while rospy.get_param("pickup_status")==3:
-        rospy.sleep(0.1)
+        rospy.sleep(0.5)
 
-    print("Loading base goal4")
+    print(num,": Loading base goal4")
     base.load_base_goal_pickup(p_base_list_4,cli_base)
     arm.load_arm_goal_pickup(p_arm_list2,cli_arm)
     rospy.sleep(4*dt/0.1)
     hsrb_gripper.command(0.8)
     while rospy.get_param("pickup_status")<6:
-        rospy.sleep(0.1)
+        rospy.sleep(0.5)
 
-    print("Loading base goal5")
+    print(num,": Loading base goal5")
     base.load_base_goal_pickup(p_base_list_5,cli_base)
     while rospy.get_param("pickup_status")==6:
-        rospy.sleep(0.1)
+        rospy.sleep(0.5)
+
+    print(num,": All Done :)")
+
+for i in range(len(can_position_list)):
+    if i==(len(can_position_list)-1):
+        end = [end_position,0]
+    else:
+        end = [can_position_list[i+1],1]
+    traj,start_position = plan(i,scene_list,scene_list_rrt,start_position,can_position_list[i],place_position,end,plot=0,debug=1-gazebo)
+    follow(i,traj,spawn_position,client_all,dt,vel_limit)
 
 
-    print('All Done :)')
+# yolo = threading.Thread(target=follow)
+# for i in range(len(can_position_list)):
+#     if i==(len(can_position_list)-1):
+#         end = [end_position,0]
+#     else:
+#         end = [can_position_list[i+1],1]
+#     traj,start_position = plan(i,scene_list,scene_list_rrt,start_position,can_position_list[i],place_position,end,plot=0,debug=1-gazebo)
+#     while True:
+#         if yolo.is_alive():
+#             rospy.sleep(1)
+#         else:
+#             break
+#     yolo = threading.Thread(target=follow,args=[i,traj,spawn_position,client_all,dt,vel_limit])
+#     yolo.start()
 
-traj = plan(scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,end_position,plot=1,debug=1-gazebo)
-follow(traj,spawn_position,client_all,dt,vel_limit)
+
+
+# yolo = Thread(target=follow,args=[traj,spawn_position,client_all,dt,vel_limit])
+# traj1,next_start = plan(scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=0,debug=1-gazebo)
+# traj2,next_start = plan(scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=0,debug=1-gazebo)
+# traj3,next_start = plan(scene_list,scene_list_rrt,next_start,can_position_list[2],place_position,[end_position,0],plot=0,debug=1-gazebo)
+
+# follow(traj1,spawn_position,client_all,dt,vel_limit)
+
+# follow(traj2,spawn_position,client_all,dt,vel_limit)
+
+# follow(traj3,spawn_position,client_all,dt,vel_limit)
