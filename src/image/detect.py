@@ -25,7 +25,9 @@ def detect(target_id,debug=0):
     '''Detect the object with the target_id in classes.txt'''
     c=0.01
     # Load the model and feed a 640x640 image to get predictions
-    net = cv2.dnn.readNet('yolo_models/yolov5s.onnx')
+    import os
+    dirname = os.path.dirname(__file__)
+    net = cv2.dnn.readNet(os.path.join(dirname, 'yolo_models/yolov5s.onnx'))
     image = get_image()
     input_image = format_yolov5(image) # making the image square
     blob = cv2.dnn.blobFromImage(input_image , 1/255.0, (640, 640), swapRB=True)
@@ -59,7 +61,7 @@ def detect(target_id,debug=0):
                 box = np.array([left, top, width, height])
                 boxes.append(box)
     class_list = []
-    with open("yolo_models/classes.txt", "r") as f:
+    with open(os.path.join(dirname, 'yolo_models/classes.txt'), "r") as f:
         class_list = [cname.strip() for cname in f.readlines()]
     indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0, 0)
     result_class_ids = []
