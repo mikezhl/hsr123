@@ -80,7 +80,8 @@ def my_get_position(spawn_position):
     base_pose = base_posestamped.pose
     KDLFrame_now_rel = exo.KDLFrame([base_pose.position.x,base_pose.position.y,base_pose.position.z,base_pose.orientation.x,base_pose.orientation.y,base_pose.orientation.z,base_pose.orientation.w])
     KDLFrame_now = KDLFrame_spawn*KDLFrame_now_rel
-    return KDLFrame_now.get_translation_and_rpy()
+    now = KDLFrame_now.get_translation_and_rpy()
+    return now[[0,1,5]]
 def my_get_pose():
     '''Get the pose of the robot, return a dictionary'''
     from sensor_msgs.msg import JointState
