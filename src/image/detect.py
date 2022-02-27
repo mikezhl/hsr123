@@ -140,7 +140,7 @@ def detect_all(target_id):
     for i in [0,np.pi/4,np.pi/2,-np.pi/4,-np.pi/2,-np.pi/4*3,-np.pi,-3.839]:
         print("Detecting angle: ", i)
         whole_body.move_to_joint_positions({"head_tilt_joint":0,'head_pan_joint': i})
-        rospy.sleep(3)
+        rospy.sleep(5)
         temp_list = detect(target_id)
         # print("For angle ",i,"there are: ",temp_list)
         current_pose = whole_body.joint_state.position[9:11]
@@ -244,4 +244,8 @@ def broadcast_once(target_vector,frame_id,name):
 
 if __name__ == '__main__':
     rospy.init_node("detect")
-    print(detect_all(41))
+    import os, sys
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    import my_functions
+    target_list = detect_all(41)
+    print([my_functions.my_transform_can_yolo_list(i,[0.5,0.5,2]) for i in target_list])
