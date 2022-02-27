@@ -1,7 +1,7 @@
 from pickup_ik import pickup_ik
 from pickup_rrt import pickup_rrt_loop
 from pickup_aico import pickup_aico
-from my_functions import my_transform_can, my_plot_analysis, my_get_pose, my_pickup,find_aico_point,my_aico_traj_new
+from my_functions import my_plot_analysis, my_get_pose, my_pickup,find_aico_point,my_aico_traj_new
 import rospy
 import matplotlib.pyplot as plt
 import numpy as np

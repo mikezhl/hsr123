@@ -9,7 +9,7 @@ import pyexotica as exo
 from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
 
-from my_functions import my_transform_can, my_plot_analysis, my_get_pose
+from my_functions import my_transform_can_detect, my_plot_analysis, my_get_pose
 def detect_traj_aico(debug=1,tag_pose=2.5,t_grasp_begin=4.5,doplot=0):
     # Init
     exo.Setup.init_ros()
@@ -40,7 +40,7 @@ def detect_traj_aico(debug=1,tag_pose=2.5,t_grasp_begin=4.5,doplot=0):
     else:
         rospy.init_node("detect_traj_aico")
         print("Getting the location of the can from gazebo")
-        scene.attach_object_local("TargetObject", "", exo.KDLFrame(my_transform_can(tag_pose)))
+        scene.attach_object_local("TargetObject", "", exo.KDLFrame(my_transform_can_detect(tag_pose)))
         print("Getting the start pose of the robot from gazebo")
         scene.set_model_state_map(my_get_pose())
     problem.start_state = scene.get_model_state()

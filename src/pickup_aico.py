@@ -9,7 +9,7 @@ import pyexotica as exo
 from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
 
-from my_functions import my_transform_can, my_plot_analysis, my_bezier,my_set_traj
+from my_functions import my_plot_analysis, my_bezier,my_set_traj
 def pickup_aico(can_position,traj_path,scene_list,gripper_orientation=0,debug=1,doplot=0):
     # Init
     exo.Setup.init_ros()

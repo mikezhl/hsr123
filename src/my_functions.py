@@ -7,9 +7,9 @@ import math
 import matplotlib.pyplot as plt
 from scipy.special import comb
 
-def my_transform_can(rotation):
+def my_transform_can_detect(rotation):
     import math
-    '''Return the position of the can relative to map, "rotation" is the Y set the launch'''
+    '''For detect: Return the position of the can relative to map, "rotation" is the Y set the launch'''
     x_offset = math.sin(rotation-math.pi/2)*0.033
     y_offset = math.cos(rotation-math.pi/2)*0.033
     tfBuffer = tf2_ros.Buffer()
