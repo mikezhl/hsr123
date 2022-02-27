@@ -53,4 +53,6 @@
         args="-file $(find hsr123)/models/hsr_coke/model.sdf -sdf -x $(arg bottle_x2) -y $(arg bottle_y2) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle2" />
   <node name="spawn_bottle3" pkg="gazebo_ros" type="spawn_model"
         args="-file $(find hsr123)/models/hsr_coke/model.sdf -sdf -x $(arg bottle_x3) -y $(arg bottle_y3) -z $(arg bottle_z) -Y $(arg bottle_Y) -model bottle3" />
+
+  <node pkg="hsr123" type="increment_server.py" name="increment_server" output="screen" />
 </launch>
