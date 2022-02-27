@@ -371,9 +371,14 @@ def my_traj_transform(base_list, KDLFrame_startbase):
     col_index = [0,1,5]
     return base_list[col_index]
 
-
-
-
+def my_transform_can_yolo_list(can_relative, spawn_position):
+    '''can_relative: [x,y,z], spawn_position: [x,y,Y]'''
+    import pyexotica as exo
+    KDLFrame_can_relative = exo.KDLFrame(np.concatenate((can_relative[0:3],[0,0,0])))
+    spawn_position = exo.KDLFrame(np.concatenate((spawn_position[0:2],[0,0,0],[spawn_position[2]])))
+    KDLFrame_can_abs = spawn_position*KDLFrame_can_relative
+    can_abs = KDLFrame_can_abs.get_translation_and_rpy()
+    return list(can_abs[0:3])
 
 
 
