@@ -32,7 +32,7 @@
                 </EndEffector>
             </EffAxisAlignment>
 
-            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="1" WorldMargin="0.11" RobotMargin="0.01"/>
+            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="1" WorldMargin="0.15" RobotMargin="0.01"/>
             <!-- <SumOfPenetrations Name="SumOfPenetrations" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/> -->
             <Distance Name="Distance">
                 <EndEffector>
