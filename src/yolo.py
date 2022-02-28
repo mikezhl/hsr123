@@ -4,6 +4,7 @@ import sys
 import hsrb_interface
 import pyexotica as exo
 import threading
+import pickle
 
 from pickup_ik import pickup_ik
 from pickup_rrt import pickup_rrt_loop
@@ -12,38 +13,6 @@ from image.detect import detect_all
 from my_functions import *
 import my_arm_client as arm
 import my_base_client as base
-
-# Settings
-gazebo=1
-dt=0.15
-vel_limit = 0.05
-# Position where the robot is spawned, set in launch file "robot_pos", [x,y,Y]
-spawn_position = [0,0,0]
-# start_position = my_get_position(spawn_position)
-start_position = [0,0,0]
-end_position = spawn_position
-place_position = [1,2,0.7]
-scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene"]
-scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
-rospy.init_node("YOLO")
-
-# Init
-if gazebo:
-    try:
-        robot = hsrb_interface.Robot()
-        whole_body = robot.get('whole_body')
-        hsrb_gripper = robot.get('gripper')
-        hsrb_gripper.command(0.8)
-    except:
-        raise Exception("Fail to initialize")
-    cli_arm, cli_base = my_Simple_Action_Clients()
-    client_all = [cli_arm, cli_base, whole_body, hsrb_gripper]
-    print("Looking for all the can")
-    can_position_list = detect_all(41)
-    # can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
-
-else:
-    can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
 
 # A basic loop
 def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
@@ -109,7 +78,13 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
     print(num,": ===Finding the arm and base trajectory for grasping")
     traj_aico1 = pickup_aico(pick,traj_path1,scene_list,gripper_orientation=0,debug=0,doplot=0)
     traj_aico2 = pickup_aico(place,traj_path2,scene_list,gripper_orientation=0,debug=0,doplot=0)
-
+    traj_aico1 = np.vstack([traj_aico1, np.concatenate([aico_end1,traj_aico1[-1,3:9]])])
+    traj_aico2 = np.vstack([traj_aico2, np.concatenate([aico_end2,traj_aico2[-1,3:9]])])
+    print("testing")
+    print(traj_rrt1[-1],traj_aico1[0])
+    print(traj_aico1[-1],traj_rrt2[0])
+    print(traj_rrt2[-1],traj_aico2[0])
+    print(traj_aico2[-1],next_start)
     # Move in RViz
     if debug:
         print("ALL DONE, Looping the solution in RViz")
@@ -123,16 +98,14 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
             my_pickup(np.concatenate((traj_rrt1,traj_aico1,traj_rrt2,traj_aico2), axis=0),pick,scene_list)
     print(num,": Planning done")
     return [traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2],next_start
-    
-def follow(num,traj,spawn_position,client,dt,vel_limit):
-    traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2 = traj
-    cli_arm, cli_base, whole_body, hsrb_gripper = client
 
+def pre_follow(num,traj,spawn_position,dt,v_max,acceleration,debug=1):
+    traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2 = traj
     # Constrct base list of rrt part1
     print(num,": Constrcting TrajectoryPoint list for rrt part1")
     KDLFrame_startbase = exo.KDLFrame([spawn_position[0],spawn_position[1],0,0,0,spawn_position[2]])
     base_list = np.array([my_traj_transform(traj_rrt1[i], KDLFrame_startbase) for i in range(len(traj_rrt1))])
-    p_base_list_1 = base.prepare_rrt(base_list,vel_limit)
+    p_base_list_1 = base.prepare_rrt_new(base_list,v_max,acceleration,debug)
     # Constrct base list of aico part1
     print(num,": Constrcting TrajectoryPoint list for aico part1")
     time_list = np.arange(0.0,dt*len(traj_aico1),dt)
@@ -148,7 +121,7 @@ def follow(num,traj,spawn_position,client,dt,vel_limit):
     # Constrct base list of rrt part2
     print(num,": Constrcting TrajectoryPoint list for  rrt part2")
     base_list = np.array([my_traj_transform(traj_rrt2[i], KDLFrame_startbase) for i in range(len(traj_rrt2))])
-    p_base_list_3 = base.prepare_rrt(base_list,vel_limit)
+    p_base_list_3 = base.prepare_rrt_new(base_list,v_max,acceleration,debug)
     # Constrct base list of aico part2
     print(num,": Constrcting TrajectoryPoint list for aico part2")
     time_list = np.arange(0.0,dt*len(traj_aico2),dt)
@@ -165,8 +138,14 @@ def follow(num,traj,spawn_position,client,dt,vel_limit):
     if len(traj_rrt3)>0:
         print(num,": Constrcting TrajectoryPoint list for  rrt part3")
         base_list = np.array([my_traj_transform(traj_rrt3[i], KDLFrame_startbase) for i in range(len(traj_rrt3))])
-        p_base_list_5 = base.prepare_rrt(base_list,vel_limit)
-    
+        p_base_list_5 = base.prepare_rrt_new(base_list,v_max,acceleration,debug)
+    else:
+        p_base_list_5=[]
+    return p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2
+
+def follow(num,p_list,client,dt):
+    cli_arm, cli_base, whole_body, hsrb_gripper = client
+    p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2 = p_list
     # Run!!
     rospy.set_param('pickup_status', 0)
     print(num,": Loading base goal1")
@@ -195,7 +174,7 @@ def follow(num,traj,spawn_position,client,dt,vel_limit):
     while rospy.get_param("pickup_status")<6:
         rospy.sleep(0.5)
 
-    if len(traj_rrt3)>0:
+    if len(p_base_list_5)>0:
         print(num,": Loading base goal5")
         base.load_base_goal_pickup(p_base_list_5,cli_base)
         while rospy.get_param("pickup_status")==6:
@@ -203,47 +182,88 @@ def follow(num,traj,spawn_position,client,dt,vel_limit):
 
     print(num,": All Done :)")
 
-# Multithreading version=================================================================================
+# Settings
+gazebo=1
+dt=0.15
+vel_limit = 0.03
+v_max = 0.2
+acceleration=0.05
+# Position where the robot is spawned, set in launch file "robot_pos", [x,y,Y]. The planning is running in abs while the following is relative to this position
+spawn_position = [0,0,0]
+# end_position and place_position is abs, not relative to spawn_position
+end_position = [0,0,0]
+place_position = [1,2,0.7]
+scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene"]
+scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
+rospy.init_node("YOLO")
+
+# Init
+if gazebo:
+    try:
+        robot = hsrb_interface.Robot()
+        whole_body = robot.get('whole_body')
+        hsrb_gripper = robot.get('gripper')
+        hsrb_gripper.command(0.8)
+    except:
+        raise Exception("Fail to initialize")
+    cli_arm, cli_base = my_Simple_Action_Clients()
+    client_all = [cli_arm, cli_base, whole_body, hsrb_gripper]
+    start_position = my_get_position(spawn_position)
+    print("Looking for all the can")
+    # can_position_list = detect_all(41)
+    # can_position_list = [my_transform_can_yolo_list(i,spawn_position) for i in can_position_list]
+    # print(can_position_list)
+    can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
+else:
+    start_position = [0,0,0]
+    can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
+
+
+# Multithreading version (Expired)=================================================================================
 # yolo = threading.Thread(target=follow)
 # for i in range(len(can_position_list)):
 #     if i==(len(can_position_list)-1):
 #         end = [end_position,0]
 #     else:
 #         end = [can_position_list[i+1],1]
-#     traj,start_position = plan(str(i)+"-PLANNING",scene_list,scene_list_rrt,start_position,can_position_list[i],place_position,end,plot=0,debug=1-gazebo)
+#     traj,start_position = plan(str(i+1)+"-PLANNING",scene_list,scene_list_rrt,start_position,can_position_list[i],place_position,end,plot=0,debug=1-gazebo)
 #     while True:
 #         if yolo.is_alive():
 #             rospy.sleep(1)
 #         else:
 #             break
-#     yolo = threading.Thread(target=follow,args=[str(i)+"-PLANNING",traj,spawn_position,client_all,dt,vel_limit])
+#     yolo = threading.Thread(target=follow,args=[str(i+1)+"-PLANNING",traj,spawn_position,client_all,dt,vel_limit])
 #     yolo.start()
 
 # Normal version========================================================================================
-traj_all=[]
-for i in range(len(can_position_list)):
-    if i==(len(can_position_list)-1):
-        end = [end_position,0]
-    else:
-        end = [can_position_list[i+1],1]
-    traj,start_position = plan(str(i)+"-PLANNING",scene_list,scene_list_rrt,start_position,can_position_list[i],place_position,end,plot=0,debug=1-gazebo)
-    traj_all.append(traj)
-for i in range(len(traj_all)):
-    follow(str(i)+"-RUNNING",traj_all[i],spawn_position,client_all,dt,vel_limit)
+# p_all=[]
+# for i in range(len(can_position_list)):
+#     if i==(len(can_position_list)-1):
+#         end = [end_position,0]
+#     else:
+#         end = [can_position_list[i+1],1]
+#     traj,start_position = plan(str(i+1)+"-PLANNING",scene_list,scene_list_rrt,start_position,can_position_list[i],place_position,end,plot=0,debug=1-gazebo)
+#     pickle.dump(traj, open('pickle/traj'+str(i+1)+'.pkl', 'wb'))
+#     p = pre_follow(str(i+1)+"-PreFollowing",traj,spawn_position,dt,v_max,acceleration,debug=0)
+#     p_all.append(p)
+# for i in range(len(p_all)):
+#     follow(str(i+1)+"-RUNNING",p_all[i],client_all,dt)
 
 
 # Debug version========================================================================================
 # traj1,next_start = plan(1,scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=0,debug=1-gazebo)
 # traj2,next_start = plan(2,scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=0,debug=1-gazebo)
 # traj3,next_start = plan(3,scene_list,scene_list_rrt,next_start,can_position_list[2],place_position,[end_position,0],plot=0,debug=1-gazebo)
-# import pickle
 # pickle.dump(traj1, open('pickle/traj1.pkl', 'wb'))
 # pickle.dump(traj2, open('pickle/traj2.pkl', 'wb'))
 # pickle.dump(traj3, open('pickle/traj3.pkl', 'wb'))
-# traj1=pickle.load(open('pickle/traj1.pkl', 'rb'))
-# traj2=pickle.load(open('pickle/traj2.pkl', 'rb'))
-# traj3=pickle.load(open('pickle/traj3.pkl', 'rb'))
-# follow(1,traj1,spawn_position,client_all,dt,vel_limit)
-# follow(2,traj2,spawn_position,client_all,dt,vel_limit)
-# follow(3,traj3,spawn_position,client_all,dt,vel_limit)
+traj1=pickle.load(open(sys.path[0]+'/pickle/traj1.pkl', 'rb'))
+traj2=pickle.load(open(sys.path[0]+'/pickle/traj2.pkl', 'rb'))
+traj3=pickle.load(open(sys.path[0]+'/pickle/traj3.pkl', 'rb'))
+p1=pre_follow(1,traj1,spawn_position,dt,v_max,acceleration,debug=0)
+p2=pre_follow(2,traj2,spawn_position,dt,v_max,acceleration,debug=0)
+p3=pre_follow(3,traj3,spawn_position,dt,v_max,acceleration,debug=0)
+follow(1,p1,client_all,dt)
+follow(2,p2,client_all,dt)
+follow(3,p1,client_all,dt)
 
