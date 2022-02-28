@@ -7,6 +7,7 @@ https://github.com/ori-drs/hsr_driveby_full
 System requirements:
 - ROS Noetic
 - Follow the HSR simulator installation instructions on the [Installing HSR Packages and Simulator Locally](https://github.com/ori-orion/orion-documentation/wiki/Installing-HSR-Packages-and-Simulator-Locally)
+- `sudo apt install python3-catkin-tools`
 
 Set up workspace and install required dependencies:
 ```bash
@@ -15,6 +16,7 @@ cd ~/catkin_ws/src
 git clone git@github.com:zhlzhl123/hsr.git
 git clone https://github.com/ToyotaResearchInstitute/hsr_meshes.git
 sudo apt install ros-noetic-exotica-examples
+catkin build
 ```
 
 ## Instructions - Basic
