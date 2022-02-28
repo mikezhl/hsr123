@@ -35,9 +35,9 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
     traj_rrt2,traj_rrt3 = find_aico_point(traj_rrt21,traj_rrt3_full,0.25,base_for_place,0.5)
     aico_start1,aico_end1 = traj_rrt1[-1,:],traj_rrt21[0,:]
     aico_start2,aico_end2 = traj_rrt2[-1,:],traj_rrt3[0,:]
-    if end[1]:
-        next_start = aico_end2
-        traj_rrt3=[]
+    # if end[1]:
+    #     next_start = aico_end2
+    #     traj_rrt3=[]
 
     # Change the orientation of the path for better grasping
     start_orientation1 = math.atan2(pick[1]-aico_start1[1],pick[0]-aico_start1[0])
@@ -78,13 +78,18 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
     print(num,": ===Finding the arm and base trajectory for grasping")
     traj_aico1 = pickup_aico(pick,traj_path1,scene_list,gripper_orientation=0,debug=0,doplot=0)
     traj_aico2 = pickup_aico(place,traj_path2,scene_list,gripper_orientation=0,debug=0,doplot=0)
-    traj_aico1 = np.vstack([traj_aico1, np.concatenate([aico_end1,traj_aico1[-1,3:9]])])
-    traj_aico2 = np.vstack([traj_aico2, np.concatenate([aico_end2,traj_aico2[-1,3:9]])])
+    # traj_aico1 = np.vstack([traj_aico1, np.concatenate([aico_end1,traj_aico1[-1,3:9]])])
+    # traj_aico2 = np.vstack([traj_aico2, np.concatenate([aico_end2,traj_aico2[-1,3:9]])])
+    if end[1]:
+        next_start = traj_aico2[-1,0:3]
+        traj_rrt3=[]
     print("testing")
-    print(traj_rrt1[-1],traj_aico1[0])
-    print(traj_aico1[-1],traj_rrt2[0])
-    print(traj_rrt2[-1],traj_aico2[0])
-    print(traj_aico2[-1],next_start)
+    print(start,traj_rrt1[0])
+    print(traj_rrt1[-1],traj_aico1[0,0:3])
+    print(traj_aico1[-1,0:3],traj_rrt2[0])
+    print(traj_rrt2[-1],traj_aico2[0,0:3])
+    print(traj_aico2[-1,0:3],next_start)
+    
     # Move in RViz
     if debug:
         print("ALL DONE, Looping the solution in RViz")
@@ -147,6 +152,7 @@ def follow(num,p_list,client,dt):
     cli_arm, cli_base, whole_body, hsrb_gripper = client
     p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2 = p_list
     # Run!!
+    rospy.sleep(0.5)
     rospy.set_param('pickup_status', 0)
     print(num,": Loading base goal1")
     base.load_base_goal_pickup(p_base_list_1,cli_base)
@@ -184,10 +190,10 @@ def follow(num,p_list,client,dt):
 
 # Settings
 gazebo=1
-dt=0.15
-vel_limit = 0.03
-v_max = 0.2
-acceleration=0.05
+dt=0.2
+vel_limit = 0.3
+v_max = 0.1
+acceleration=0.01
 # Position where the robot is spawned, set in launch file "robot_pos", [x,y,Y]. The planning is running in abs while the following is relative to this position
 spawn_position = [0,0,0]
 # end_position and place_position is abs, not relative to spawn_position

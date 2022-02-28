@@ -40,17 +40,17 @@ def prepare_rrt(base_list,v_max,acceleration):
             time_list[i] = tt/time_num*t1+t2
         else:
             time_list[i] = (cum[i]-s1)/v_max+t1
+    # time_list = (time_list+0.5)*1.5
     base_list = np.c_[base_list, np.concatenate(([0],time_list))]
     base_vel  = [(base_list[i+1,0:3]-base_list[i,0:3])/(base_list[i+1,3]-base_list[i,3]) for i in range(len(base_list)-1)]
-    base_vel=[np.array([0,0,0])]+base_vel
+    base_list = base_list[1::]
     base_vel=np.array(base_vel)
-    time_list = np.insert(time_list,0,0)
-    cum = np.insert(cum,0,0)
+    print(base_vel[0])
     plt.plot(time_list,(base_vel[:,0]**2+base_vel[:,1]**2)**0.5,"r",label="velocity-now")
     plt.plot(time_list,cum,"b",label="distance-now")
-    time_before = cum[-1]/0.03
-    plt.plot([0,time_before],[0.03,0.03],"r--",label="velocity-before")
-    plt.plot([0,time_before],[0,cum[-1]],"b--",label="distance-before")
+    # time_before = cum[-1]/0.03
+    # plt.plot([0,time_before],[0.03,0.03],"r--",label="velocity-before")
+    # plt.plot([0,time_before],[0,cum[-1]],"b--",label="distance-before")
     plt.xlabel("Time /s")
     plt.ylabel("m/s or m")
     plt.legend()
@@ -61,7 +61,7 @@ def prepare_rrt(base_list,v_max,acceleration):
 spawn_position = [0,0,0]
 v_max = 0.15
 acceleration = 0.08
-traj=pickle.load(open(sys.path[0]+'/pickle/traj3.pkl', 'rb'))
+traj=pickle.load(open(sys.path[0]+'/pickle/traj2.pkl', 'rb'))
 
 traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2 = traj
 
