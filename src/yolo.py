@@ -124,7 +124,7 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
     print(num,": Planning done")
     return [traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2],next_start
 
-def pre_follow(num,traj):
+def pre_follow(num,traj,spawn_position,vel_limit,dt):
     traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2 = traj
 
     # Constrct base list of rrt part1
@@ -172,7 +172,7 @@ def follow(num,traj,spawn_position,client,dt,vel_limit):
     traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2 = traj
     cli_arm, cli_base, whole_body, hsrb_gripper = client
 
-    p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2 = pre_follow(num,traj)
+    p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2 = pre_follow(num,traj,spawn_position,vel_limit,dt)
     
     # Run!!
     rospy.set_param('pickup_status', 0)
