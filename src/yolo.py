@@ -233,13 +233,13 @@ def follow(num,traj,spawn_position,client,dt,vel_limit):
 
 
 # Debug version========================================================================================
-traj1,next_start = plan(1,scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=0,debug=1-gazebo)
-traj2,next_start = plan(2,scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=0,debug=1-gazebo)
-traj3,next_start = plan(3,scene_list,scene_list_rrt,next_start,can_position_list[2],place_position,[end_position,0],plot=0,debug=1-gazebo)
+# traj1,next_start = plan(1,scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=0,debug=1-gazebo)
+# traj2,next_start = plan(2,scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=0,debug=1-gazebo)
+# traj3,next_start = plan(3,scene_list,scene_list_rrt,next_start,can_position_list[2],place_position,[end_position,0],plot=0,debug=1-gazebo)
 import pickle
-pickle.dump(traj1, open('pickle/traj1.pkl', 'wb'))
-pickle.dump(traj2, open('pickle/traj2.pkl', 'wb'))
-pickle.dump(traj3, open('pickle/traj3.pkl', 'wb'))
+# pickle.dump(traj1, open('pickle/traj1.pkl', 'wb'))
+# pickle.dump(traj2, open('pickle/traj2.pkl', 'wb'))
+# pickle.dump(traj3, open('pickle/traj3.pkl', 'wb'))
 traj1=pickle.load(open('pickle/traj1.pkl', 'rb'))
 traj2=pickle.load(open('pickle/traj2.pkl', 'rb'))
 traj3=pickle.load(open('pickle/traj3.pkl', 'rb'))
