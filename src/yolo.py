@@ -135,13 +135,12 @@ def pre_follow(num,traj,spawn_position,vel_limit,dt):
         p_base_list_5 = base.prepare_rrt(base_list,vel_limit)
     else:
         p_base_list_5=[]
-    return p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2
-def follow(num,traj,spawn_position,client,dt,vel_limit):
+    return [p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2]
+def follow(num,traj,spawn_position,client,dt,vel_limit,p_list):
     traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2 = traj
     cli_arm, cli_base, whole_body, hsrb_gripper = client
 
-    p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2 = pre_follow(num,traj,spawn_position,vel_limit,dt)
-    
+    p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2 = p_list
     # Run!!
     rospy.set_param('pickup_status', 0)
     print(num,": Loading base goal1")
@@ -250,7 +249,10 @@ import pickle
 traj1=pickle.load(open('pickle/traj1.pkl', 'rb'))
 traj2=pickle.load(open('pickle/traj2.pkl', 'rb'))
 traj3=pickle.load(open('pickle/traj3.pkl', 'rb'))
-follow(1,traj1,spawn_position,client_all,dt,vel_limit)
-follow(2,traj2,spawn_position,client_all,dt,vel_limit)
-follow(3,traj3,spawn_position,client_all,dt,vel_limit)
+p_list1 = pre_follow(1,traj1,spawn_position,vel_limit,dt)
+follow(1,traj1,spawn_position,client_all,dt,vel_limit,p_list1)
+p_list2 = pre_follow(2,traj2,spawn_position,vel_limit,dt)
+follow(2,traj2,spawn_position,client_all,dt,vel_limit,p_list2)
+p_list3 = pre_follow(3,traj3,spawn_position,vel_limit,dt)
+follow(3,traj3,spawn_position,client_all,dt,vel_limit,p_list3)
 
