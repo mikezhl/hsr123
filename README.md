@@ -7,6 +7,7 @@ https://github.com/ori-drs/hsr_driveby_full
 System requirements:
 - ROS Noetic
 - Follow the HSR simulator installation instructions on the [Installing HSR Packages and Simulator Locally](https://github.com/ori-orion/orion-documentation/wiki/Installing-HSR-Packages-and-Simulator-Locally)
+- `sudo apt install python3-catkin-tools`
 
 Set up workspace and install required dependencies:
 ```bash
@@ -15,6 +16,7 @@ cd ~/catkin_ws/src
 git clone git@github.com:zhlzhl123/hsr.git
 git clone https://github.com/ToyotaResearchInstitute/hsr_meshes.git
 sudo apt install ros-noetic-exotica-examples
+catkin build
 ```
 
 ## Instructions - Basic
@@ -48,7 +50,7 @@ Pick up a soda can in a random place with apriltag from a random start place. Us
 ### Description
 Pick up a soda can in a random place with yolo v5 detection. Robots start from a random place. Using IK, AICO and RRT solver. (Download `yolov3.weights` into `hsr123/src/image/yolo_models` before using)
 #### Run!
-- Start the gazebo with `roslaunch hsr123 yolo.launch`, then run `hsr123/src/increment_server.py`.
+- Start the gazebo with `roslaunch hsr123 yolo.launch`
 - Run `hsr123/src/yolo.py`. (Detect->Plan->Pick and Drop)
 #### Debug
 - In `hsr123/src/yolo.py`, set `gazebo=0`, set `can_position_list` manually, choose the debug version at the end by commenting and uncommenting.
