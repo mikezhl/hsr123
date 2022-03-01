@@ -123,10 +123,9 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
             my_pickup(np.concatenate((traj_rrt1,traj_aico1,traj_rrt2,traj_aico2), axis=0),pick,scene_list)
     print(num,": Planning done")
     return [traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2],next_start
-    
-def follow(num,traj,spawn_position,client,dt,vel_limit):
+
+def pre_follow(num,traj):
     traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2 = traj
-    cli_arm, cli_base, whole_body, hsrb_gripper = client
 
     # Constrct base list of rrt part1
     print(num,": Constrcting TrajectoryPoint list for rrt part1")
@@ -166,6 +165,14 @@ def follow(num,traj,spawn_position,client,dt,vel_limit):
         print(num,": Constrcting TrajectoryPoint list for  rrt part3")
         base_list = np.array([my_traj_transform(traj_rrt3[i], KDLFrame_startbase) for i in range(len(traj_rrt3))])
         p_base_list_5 = base.prepare_rrt(base_list,vel_limit)
+    else:
+        p_base_list_5=[]
+    return p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2
+def follow(num,traj,spawn_position,client,dt,vel_limit):
+    traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2 = traj
+    cli_arm, cli_base, whole_body, hsrb_gripper = client
+
+    p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2 = pre_follow(num,traj)
     
     # Run!!
     rospy.set_param('pickup_status', 0)
