@@ -13,38 +13,6 @@ from my_functions import *
 import my_arm_client as arm
 import my_base_client as base
 
-# Settings
-gazebo=1
-dt=0.15
-vel_limit = 0.05
-# Position where the robot is spawned, set in launch file "robot_pos", [x,y,Y]
-spawn_position = [0,0,0]
-# start_position = my_get_position(spawn_position)
-start_position = [0,0,0]
-end_position = spawn_position
-place_position = [1,2,0.7]
-scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene"]
-scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
-rospy.init_node("YOLO")
-
-# Init
-if gazebo:
-    try:
-        robot = hsrb_interface.Robot()
-        whole_body = robot.get('whole_body')
-        hsrb_gripper = robot.get('gripper')
-        hsrb_gripper.command(0.8)
-    except:
-        raise Exception("Fail to initialize")
-    cli_arm, cli_base = my_Simple_Action_Clients()
-    client_all = [cli_arm, cli_base, whole_body, hsrb_gripper]
-    print("Looking for all the can")
-    # can_position_list = detect_all(41)
-    can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
-
-else:
-    can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
-
 # A basic loop
 def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
     '''end[0] is the end position, end[1] is the type of the end (0:xyz 1:xyz)'''
@@ -209,6 +177,38 @@ def follow(num,traj,spawn_position,client,dt,vel_limit):
             rospy.sleep(0.5)
 
     print(num,": All Done :)")
+
+# Settings
+gazebo=1
+dt=0.15
+vel_limit = 0.05
+# Position where the robot is spawned, set in launch file "robot_pos", [x,y,Y]
+spawn_position = [0,0,0]
+# start_position = my_get_position(spawn_position)
+start_position = [0,0,0]
+end_position = spawn_position
+place_position = [1,2,0.7]
+scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene"]
+scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
+rospy.init_node("YOLO")
+
+# Init
+if gazebo:
+    try:
+        robot = hsrb_interface.Robot()
+        whole_body = robot.get('whole_body')
+        hsrb_gripper = robot.get('gripper')
+        hsrb_gripper.command(0.8)
+    except:
+        raise Exception("Fail to initialize")
+    cli_arm, cli_base = my_Simple_Action_Clients()
+    client_all = [cli_arm, cli_base, whole_body, hsrb_gripper]
+    print("Looking for all the can")
+    # can_position_list = detect_all(41)
+    can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
+
+else:
+    can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
 
 # Multithreading version=================================================================================
 # yolo = threading.Thread(target=follow)
