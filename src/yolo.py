@@ -226,18 +226,18 @@ else:
 #     yolo = threading.Thread(target=follow,args=[str(i)+"-PLANNING",traj,spawn_position,client_all,dt,vel_limit])
 #     yolo.start()
 
-# Normal version (Wasted)========================================================================================
-# traj_all=[]
+# Normal version========================================================================================
+# p_all=[]
 # for i in range(len(can_position_list)):
 #     if i==(len(can_position_list)-1):
 #         end = [end_position,0]
 #     else:
 #         end = [can_position_list[i+1],1]
 #     traj,start_position = plan(str(i)+"-PLANNING",scene_list,scene_list_rrt,start_position,can_position_list[i],place_position,end,plot=0,debug=1-gazebo)
-#     traj_all.append(traj)
-# for i in range(len(traj_all)):
-#     follow(str(i)+"-RUNNING",traj_all[i],spawn_position,client_all,dt,vel_limit)
-
+#     p = pre_follow(str(i)+"-PLANNING",traj,spawn_position,v_max,acceleration,dt,debug=0)
+#     p_all.append(p)
+# for i in range(len(p_all)):
+#     follow(str(i)+"-RUNNING",client_all,dt,p_all[i])
 
 # Debug version========================================================================================
 # traj1,next_start = plan(1,scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=0,debug=1-gazebo)
