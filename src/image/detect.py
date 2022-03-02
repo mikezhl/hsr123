@@ -88,6 +88,7 @@ def detect(target_id,debug=0):
             cv2.rectangle(image, (box[0], box[1] - 20), (box[0] + box[2], box[1]), (0, 255, 255), -1)
             cv2.putText(image, class_list[class_id], (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,0))
         cv2.imshow("output", image)
+        cv2.waitKey()
     return target_list
 def get_vector(target):
     '''Return the vector from the camera to the object'''
@@ -150,17 +151,26 @@ def detect_all(target_id):
             pitch = np.arctan2(-target_vector[1],np.sqrt(target_vector[0]**2+target_vector[2]**2))
             robot = hsrb_interface.Robot()
             whole_body = robot.get('whole_body')
+            # print(float(current_pose[0])-yaw,float(current_pose[1])+pitch)
             whole_body.move_to_joint_positions({'head_pan_joint': float(current_pose[0])-yaw,"head_tilt_joint":float(current_pose[1])+pitch})
+            rospy.sleep(2)
+            status = 0
             temp_temp_target_list = detect(41)
+            # print("temp_temp_target_list",temp_temp_target_list)
             for temp_temp_target in temp_temp_target_list:
                 temp_target_vector = get_vector(temp_temp_target)
-                if abs(temp_target_vector[0])<0.1 and abs(temp_target_vector[1])<0.1:
-                    target_vector = temp_target_vector
+                # print(temp_target_vector)
+                if abs(temp_target_vector[0])<0.04 and abs(temp_target_vector[1])<0.04:
+                    target_vector_new = temp_target_vector
+                    status = 1
+            if status==0:
+                print("Failed to find distance")
+                continue
             target_point = PointStamped()
             target_point.header.frame_id = "head_rgbd_sensor_link"
-            target_point.point.x = target_vector[0]
-            target_point.point.y = target_vector[1]
-            target_point.point.z = target_vector[2]
+            target_point.point.x = target_vector_new[0]
+            target_point.point.y = target_vector_new[1]
+            target_point.point.z = target_vector_new[2]
             buffer = tf2_ros.Buffer()
             listener = tf2_ros.TransformListener(buffer)
             rospy.sleep(0.2)
@@ -244,8 +254,10 @@ def broadcast_once(target_vector,frame_id,name):
 
 if __name__ == '__main__':
     rospy.init_node("detect")
+    # print(detect(41,1))
     import os, sys
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     import my_functions
+    spawn_position = [0,0,0]
     target_list = detect_all(41)
-    print([my_functions.my_transform_can_yolo_list(i,[0.5,0.5,2]) for i in target_list])
+    print([my_functions.my_transform_can_yolo_list(i,spawn_position) for i in target_list])
