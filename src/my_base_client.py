@@ -107,12 +107,10 @@ def prepare_rrt_new(base_list,v_max,acceleration,debug=0):
             time_list[i] = tt/time_num*t1+t2
         else:
             time_list[i] = (cum[i]-s1)/v_max+t1
-    time_list = (time_list+0.5)*1.5
     base_list = np.c_[base_list, np.concatenate(([0],time_list))]
     base_vel  = [(base_list[i+1,0:3]-base_list[i,0:3])/(base_list[i+1,3]-base_list[i,3]) for i in range(len(base_list)-1)]
     base_list = base_list[1::]
     base_vel=np.array(base_vel)
-    print(base_vel[0])
     if debug:
         import matplotlib.pyplot as plt
         plt.plot(time_list,(base_vel[:,0]**2+base_vel[:,1]**2)**0.5,"r",label="velocity-now")
