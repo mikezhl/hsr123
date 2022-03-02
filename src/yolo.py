@@ -4,6 +4,7 @@ import sys
 import hsrb_interface
 import pyexotica as exo
 import threading
+import pickle
 
 from pickup_ik import pickup_ik
 from pickup_rrt import pickup_rrt_loop
@@ -181,15 +182,18 @@ dt=0.15
 vel_limit = 0.05
 v_max = 0.2
 acceleration=0.05
-# Position where the robot is spawned, set in launch file "robot_pos", [x,y,Y]
+rospy.init_node("YOLO")
+# Position where the robot is spawned, set in launch file "robot_pos", [x,y,Y]. The planning is running in abs while the following is relative to this position
 spawn_position = [0,0,0]
-# start_position = my_get_position(spawn_position)
-start_position = [0,0,0]
+# end_position and place_position is abs, not relative to spawn_position
+# omni_base.go_abs(1.0, 1.0, 1.0, 10)
+start_position = my_get_position(spawn_position)
+print(start_position)
+# start_position = [0,0,0]
 end_position = spawn_position
 place_position = [1,2,0.7]
 scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene"]
 scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
-rospy.init_node("YOLO")
 
 # Init
 if gazebo:
@@ -205,6 +209,7 @@ if gazebo:
     print("Looking for all the can")
     # can_position_list = detect_all(41)
     # can_position_list = [my_transform_can_yolo_list(i,spawn_position) for i in can_position_list]
+    # print(can_position_list)
     can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
 
 else:
@@ -240,13 +245,12 @@ else:
 #     follow(str(i)+"-RUNNING",client_all,dt,p_all[i])
 
 # Debug version========================================================================================
-# traj1,next_start = plan(1,scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=0,debug=1-gazebo)
-# traj2,next_start = plan(2,scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=0,debug=1-gazebo)
-# traj3,next_start = plan(3,scene_list,scene_list_rrt,next_start,can_position_list[2],place_position,[end_position,0],plot=0,debug=1-gazebo)
-import pickle
-# pickle.dump(traj1, open('pickle/traj1.pkl', 'wb'))
-# pickle.dump(traj2, open('pickle/traj2.pkl', 'wb'))
-# pickle.dump(traj3, open('pickle/traj3.pkl', 'wb'))
+traj1,next_start = plan(1,scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=0,debug=1-gazebo)
+traj2,next_start = plan(2,scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=0,debug=1-gazebo)
+traj3,next_start = plan(3,scene_list,scene_list_rrt,next_start,can_position_list[2],place_position,[end_position,0],plot=0,debug=1-gazebo)
+pickle.dump(traj1, open('pickle/traj1.pkl', 'wb'))
+pickle.dump(traj2, open('pickle/traj2.pkl', 'wb'))
+pickle.dump(traj3, open('pickle/traj3.pkl', 'wb'))
 traj1=pickle.load(open('pickle/traj1.pkl', 'rb'))
 traj2=pickle.load(open('pickle/traj2.pkl', 'rb'))
 traj3=pickle.load(open('pickle/traj3.pkl', 'rb'))
