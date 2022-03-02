@@ -92,14 +92,13 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
     print(num,": Planning done")
     return [traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2],next_start
 
-def pre_follow(num,traj,spawn_position,vel_limit,dt):
+def pre_follow(num,traj,spawn_position,v_max,acceleration,dt,debug=0):
     traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2 = traj
-
     # Constrct base list of rrt part1
     print(num,": Constrcting TrajectoryPoint list for rrt part1")
     KDLFrame_startbase = exo.KDLFrame([spawn_position[0],spawn_position[1],0,0,0,spawn_position[2]])
     base_list = np.array([my_traj_transform(traj_rrt1[i], KDLFrame_startbase) for i in range(len(traj_rrt1))])
-    p_base_list_1 = base.prepare_rrt(base_list,vel_limit)
+    p_base_list_1 = base.prepare_rrt_new(base_list,v_max,acceleration,debug)
     # Constrct base list of aico part1
     print(num,": Constrcting TrajectoryPoint list for aico part1")
     time_list = np.arange(0.0,dt*len(traj_aico1),dt)
@@ -115,7 +114,7 @@ def pre_follow(num,traj,spawn_position,vel_limit,dt):
     # Constrct base list of rrt part2
     print(num,": Constrcting TrajectoryPoint list for  rrt part2")
     base_list = np.array([my_traj_transform(traj_rrt2[i], KDLFrame_startbase) for i in range(len(traj_rrt2))])
-    p_base_list_3 = base.prepare_rrt(base_list,vel_limit)
+    p_base_list_3 = base.prepare_rrt_new(base_list,v_max,acceleration,debug)
     # Constrct base list of aico part2
     print(num,": Constrcting TrajectoryPoint list for aico part2")
     time_list = np.arange(0.0,dt*len(traj_aico2),dt)
@@ -132,13 +131,13 @@ def pre_follow(num,traj,spawn_position,vel_limit,dt):
     if len(traj_rrt3)>0:
         print(num,": Constrcting TrajectoryPoint list for  rrt part3")
         base_list = np.array([my_traj_transform(traj_rrt3[i], KDLFrame_startbase) for i in range(len(traj_rrt3))])
-        p_base_list_5 = base.prepare_rrt(base_list,vel_limit)
+        p_base_list_5 = base.prepare_rrt_new(base_list,v_max,acceleration,debug)
     else:
         p_base_list_5=[]
     return [p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2]
-def follow(num,traj,client,dt,p_list):
-    cli_arm, cli_base, whole_body, hsrb_gripper = client
 
+def follow(num,client,dt,p_list):
+    cli_arm, cli_base, whole_body, hsrb_gripper = client
     p_base_list_1,p_base_list_2,p_base_list_3,p_base_list_4,p_base_list_5,p_arm_list1,p_arm_list2 = p_list
     # Run!!
     rospy.set_param('pickup_status', 0)
@@ -180,6 +179,8 @@ def follow(num,traj,client,dt,p_list):
 gazebo=1
 dt=0.15
 vel_limit = 0.05
+v_max = 0.2
+acceleration=0.05
 # Position where the robot is spawned, set in launch file "robot_pos", [x,y,Y]
 spawn_position = [0,0,0]
 # start_position = my_get_position(spawn_position)
@@ -203,12 +204,13 @@ if gazebo:
     client_all = [cli_arm, cli_base, whole_body, hsrb_gripper]
     print("Looking for all the can")
     # can_position_list = detect_all(41)
+    # can_position_list = [my_transform_can_yolo_list(i,spawn_position) for i in can_position_list]
     can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
 
 else:
     can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
 
-# Multithreading version=================================================================================
+# Multithreading version (Wasted)=================================================================================
 # yolo = threading.Thread(target=follow)
 # for i in range(len(can_position_list)):
 #     if i==(len(can_position_list)-1):
@@ -224,7 +226,7 @@ else:
 #     yolo = threading.Thread(target=follow,args=[str(i)+"-PLANNING",traj,spawn_position,client_all,dt,vel_limit])
 #     yolo.start()
 
-# Normal version========================================================================================
+# Normal version (Wasted)========================================================================================
 # traj_all=[]
 # for i in range(len(can_position_list)):
 #     if i==(len(can_position_list)-1):
@@ -248,10 +250,10 @@ import pickle
 traj1=pickle.load(open('pickle/traj1.pkl', 'rb'))
 traj2=pickle.load(open('pickle/traj2.pkl', 'rb'))
 traj3=pickle.load(open('pickle/traj3.pkl', 'rb'))
-p_list1 = pre_follow(1,traj1,spawn_position,vel_limit,dt)
-follow(1,traj1,client_all,dt,p_list1)
-p_list2 = pre_follow(2,traj2,spawn_position,vel_limit,dt)
-follow(2,traj2,client_all,dt,p_list2)
-p_list3 = pre_follow(3,traj3,spawn_position,vel_limit,dt)
-follow(3,traj3,client_all,dt,p_list3)
+p_list1 = pre_follow(1,traj1,spawn_position,v_max,acceleration,dt,debug=0)
+p_list2 = pre_follow(2,traj2,spawn_position,v_max,acceleration,dt,debug=0)
+p_list3 = pre_follow(3,traj3,spawn_position,v_max,acceleration,dt,debug=0)
+follow(1,client_all,dt,p_list1)
+follow(2,client_all,dt,p_list2)
+follow(3,client_all,dt,p_list3)
 
