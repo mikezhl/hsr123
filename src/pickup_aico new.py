@@ -10,11 +10,11 @@ from pyexotica.publish_trajectory import publish_pose, plot, sig_int_handler
 import exotica_core_task_maps_py
 
 from my_functions import my_plot_analysis, my_bezier,my_set_traj
-def pickup_aico_new(can_position,traj_path,scene_list,gripper_orientation=0,debug=1,doplot=0):
+def pickup_aico_new(can_position,traj_path,scene_list,debug=1,doplot=0):
     # Init
     exo.Setup.init_ros()
     t_grasp_begin=4
-    config_name = '{hsr123}/resources/pickup/aico.xml'
+    config_name = '{hsr123}/resources/pickup/aico_new.xml'
     solver = exo.Setup.load_solver(config_name)
     problem = solver.get_problem()
     scene = problem.get_scene()
@@ -57,21 +57,15 @@ def pickup_aico_new(can_position,traj_path,scene_list,gripper_orientation=0,debu
 
     # Set the Task map
     location_can = scene.fk('SodaCan').get_translation_and_rpy()
-    if isinstance(gripper_orientation,int):
-        location_gripper = scene.fk('hand_palm_link').get_translation_and_rpy()
-        relative_direction = location_can-location_gripper
-        gripper_orientation = [relative_direction[0],relative_direction[1]]
-        gripper_orientation = gripper_orientation/(gripper_orientation[0]**2+gripper_orientation[1]**2)**0.5
     t_grasp_duration = 1.5
     T_grasp_begin = int(t_grasp_begin / problem.tau)
     T_grasp_end = int((t_grasp_begin + t_grasp_duration) / problem.tau)
-    problem.get_task_maps()["EffAxisAlignment_before_grasp"].set_direction("hand_palm_link",np.append(gripper_orientation,[0.0]))
     problem.get_task_maps()["FinalPose"].joint_ref = np.array([float(end[1]),float(end[2]),float(end[3]),  0.  ,  0.  , -1.57, -1.57,  0.  ])
     for t in range(T_grasp_begin, T_grasp_end):
         problem.set_rho('EffPosition', 1e3, t)
         problem.set_goal('EffPosition', location_can[:3], t)
-    for t in range(T_grasp_begin-15,T_grasp_begin-10):
-        problem.set_rho('EffAxisAlignment_before_grasp', 100, t)
+    for t in range(20,T_grasp_begin):
+        problem.set_rho('LookAt', 1000, t)
     for t in range(T_grasp_begin, problem.T):
         problem.set_rho('EffAxisAlignment_after_grasp', 1e3, t)
     for t in range(10, problem.T-10):
@@ -94,8 +88,6 @@ def pickup_aico_new(can_position,traj_path,scene_list,gripper_orientation=0,debu
         midpoint = int((t_grasp_begin + t_grasp_duration)/problem.tau)
         signal.signal(signal.SIGINT, sig_int_handler)
         print("mug_location:",location_can)
-        # print(solution)
-        print(gripper_orientation)
         t = 0
         while True:
             problem.get_scene().update(solution[t], float(t) * problem.T)
@@ -114,4 +106,4 @@ def pickup_aico_new(can_position,traj_path,scene_list,gripper_orientation=0,debu
 if __name__ == '__main__':
     traj_path=sys.path[0]+"/pickup_traj/base1.traj"
     scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
-    pickup_aico_new([0.7914706058544925, -0.9882949445584605, 0.798380758036232],traj_path,scene_list,gripper_orientation=0,debug=1,doplot=0)
+    pickup_aico_new([0.7914706058544925, -0.9882949445584605, 0.798380758036232],traj_path,scene_list,debug=1,doplot=0)

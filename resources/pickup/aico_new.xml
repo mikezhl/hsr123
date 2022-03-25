@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<PlannerDemoConfig>
+    <AICOSolver Name="MySolver">
+        <Debug>1</Debug>
+        <MaxIterations>500</MaxIterations>
+        <MaxBacktrackIterations>50</MaxBacktrackIterations>
+        <FunctionTolerance>1e-5</FunctionTolerance>
+        <Damping>0.001</Damping>
+    </AICOSolver>
+
+    <UnconstrainedTimeIndexedProblem Name="MyProblem">
+        <PlanningScene>
+            <Scene>
+                <JointGroup>arm_with_base</JointGroup>
+                <SetRobotDescriptionRosParams>1</SetRobotDescriptionRosParams>
+                <URDF>{hsr123}/resources/hsrb.urdf</URDF>
+                <SRDF>{hsr123}/resources/hsrb.srdf</SRDF>
+                <Links>
+                    <Link Name="TargetObject"/>
+                    <Link Name="BaseTarget"/>
+                </Links>
+                <Trajectories>
+                    <Trajectory Link="BaseTarget" File="{hsr123}/resources/pickup/base.traj"/>
+                </Trajectories>
+                <RobotLinksToExcludeFromCollisionScene>head_pan_link,hand_palm_link,hand_l_spring_proximal_link,hand_r_spring_proximal_link</RobotLinksToExcludeFromCollisionScene>
+            </Scene>
+        </PlanningScene>
+
+        <Maps>
+            <JointLimit Name="JointLimit" SafePercentage="0.0"/>
+
+            <EffPositionXY Name="BasePosition">
+                <EndEffector>
+                    <Frame Link="base_footprint" Base="BaseTarget"/>
+                </EndEffector>
+            </EffPositionXY>
+
+            <EffPosition Name="EffPosition">
+                <EndEffector>
+                    <Frame Link="hand_palm_link" LinkOffset="0 0 0.04"/>
+                </EndEffector>
+            </EffPosition>
+
+            <EffAxisAlignment Name="EffAxisAlignment_after_grasp">
+                <EndEffector>
+                    <Frame Link="hand_palm_link" Direction="0 0 1" Axis="1 0 0"/>
+                </EndEffector>
+            </EffAxisAlignment>
+            
+            <LookAt Name="LookAt">
+                <EndEffector>
+                    <!-- EndEffector #1 => Target to look at, in relative frame of EffPoint BaseOffset="0 0 0 -1.57 0 -1.57"-->
+                    <Frame Link="TargetObject" Base="hand_palm_link" />
+                </EndEffector>
+            </LookAt>
+            <JointPose Name="Regularization"/>
+
+            <PointToPlane Name="StayHeight">
+                <EndEffector>
+                    <Frame Link="hand_palm_link" Base="TargetObject"/>
+                </EndEffector>
+            </PointToPlane>
+            
+            <JointPose Name="FinalPose" JointMap="0 1 2 3 4 5 6 7" JointRef="0 0 0 0 0 -1.57 -1.57 0"/>
+
+            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/>
+            <!-- <SumOfPenetrations Name="SumOfPenetrations" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/> -->
+        </Maps>
+
+        <Cost>
+            <!-- Penalise joint limit violation. Active during the entire task. -->
+            <Task Task="JointLimit" Rho="1e4"/>
+            <!-- Follow the given base trajectory in XY -->
+            <Task Task="BasePosition" Rho="1"/>
+            <!-- Position for the end-effector during the grasping phase. Rho set in Python. -->
+            <Task Task="EffPosition" Rho="0"/>
+            <!-- Alignment of the end-effector during/after the grasphing phase. Rho set in Python. -->
+            <Task Task="EffAxisAlignment_after_grasp" Rho="0"/>
+            <Task Task="LookAt" Rho="0"/>
+            <!-- Avoid collision with table -->
+            <Task Task="StayHeight" Rho="0" Goal="0"/>
+            <!-- Achieve a zero-rotation at the end of the trajectory. Rho set in Python. -->
+            <Task Task="FinalPose" Rho="0"/>
+            <!-- Collision avoidance -->
+            <Task Task="SCD" Rho="0"/>
+            <!-- <Task Task="SumOfPenetrations" Rho="1e2"/> -->
+        </Cost>
+
+        <T>100</T>
+        <tau>0.1</tau>
+        <Wrate>1e1</Wrate>
+        <!-- <W>5 5 5 5 4 3 2 1</W> -->
+    </UnconstrainedTimeIndexedProblem>
+</PlannerDemoConfig>
