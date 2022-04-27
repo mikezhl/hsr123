@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function, division
+from cProfile import label
 import rospy
 import sys
 from time import time, sleep
@@ -87,10 +88,17 @@ def pickup_rrt_loop(start, goal,scene_list,num=5,debug=1):
     print("RRT solved in: ",round(time.time()-pickup_rrt_loop_starttime,2))
     if debug:
         np.save(sys.path[0]+"/trajectories/"+"pickup_rrt",solution)
-        plt.plot(solution[:,0],solution[:,1],'b--',label="Solution")
+        plt.plot(solution[:,0],solution[:,1],'b--',label="The best one")
+        # rt1 = plt.Rectangle((0.75,1.75),0.5,0.5)
+        rt2 = plt.Rectangle((0,-1.05),1.4,0.7)
+        # plt.gca().add_patch(rt1)
+        plt.gca().add_patch(rt2)
+        plt.plot(start[0],start[1],'ok',label="Start or end")
+        plt.plot(goal[0],goal[1],'ok')
+        plt.gca().set_aspect('equal', adjustable='box')
         plt.legend(loc="upper left")
         plt.show()
-        loop_rviz(problem,solution)
+        # loop_rviz(problem,solution)
         
     else:
         return solution
@@ -99,4 +107,4 @@ def pickup_rrt_loop(start, goal,scene_list,num=5,debug=1):
 if __name__ == '__main__':
     scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene"]
     # pickup_rrt([-1,-2,0],[ 0.9187 ,-0.0243, -2.0765],scene_list, debug=1)
-    pickup_rrt_loop([ 1.646 , -0.2155 , 1.3856], [ 0.8926 ,-1.359,   1.4979],scene_list_rrt,num=5)
+    pickup_rrt_loop([ 1 , 0 , 1.3856], [ 0.8926 ,-1.5,   1.4979],scene_list_rrt,num=5)

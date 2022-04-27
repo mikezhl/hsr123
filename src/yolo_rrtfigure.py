@@ -1,0 +1,121 @@
+import numpy as np
+import math
+import sys
+import hsrb_interface
+import pyexotica as exo
+import threading
+import pickle
+
+from pickup_ik import pickup_ik
+from pickup_rrt import pickup_rrt_loop
+from pickup_aico import pickup_aico
+from image.detect import detect_all
+from my_functions import *
+import my_arm_client as arm
+import my_base_client as base
+
+# A basic loop
+def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
+    '''end[0] is the end position, end[1] is the type of the end (0:xyz 1:xyz)'''
+    # Find the base trajectory and find the start and end for AICO pickup
+    print(num,": ===Finding the base trajectory and the start and end for AICO pickup")
+    base_for_pickup = pickup_ik(pick,scene_list,debug=0)
+    print(num,": From pickup_ik, base_for_pickup: ",base_for_pickup[0:3])
+    base_for_place = pickup_ik(place,scene_list,debug=0)
+    print(num,": From pickup_ik: base_for_place: ",base_for_place[0:3])
+    traj_rrt1_full = pickup_rrt_loop(start,base_for_pickup[0:3],scene_list_rrt,num=2,debug=0)
+    traj_rrt2_full = pickup_rrt_loop(base_for_pickup[0:3],base_for_place[0:3],scene_list_rrt,num=2,debug=0)
+    if end[1]:
+        base_for_end = pickup_ik(end[0],scene_list,debug=0)
+        traj_rrt3_full = pickup_rrt_loop(base_for_place[0:3],base_for_end[0:3],scene_list_rrt,num=2,debug=0)
+    else:
+        traj_rrt3_full = pickup_rrt_loop(base_for_place[0:3],end[0],scene_list_rrt,num=2,debug=0)
+        next_start=0
+    traj_rrt1,traj_rrt21 = find_aico_point(traj_rrt1_full,traj_rrt2_full,0.25,base_for_pickup,0.5)
+    traj_rrt2,traj_rrt3 = find_aico_point(traj_rrt21,traj_rrt3_full,0.25,base_for_place,0.5)
+    aico_start1,aico_end1 = traj_rrt1[-1,:],traj_rrt21[0,:]
+    aico_start2,aico_end2 = traj_rrt2[-1,:],traj_rrt3[0,:]
+    if end[1]:
+        next_start = aico_end2
+        traj_rrt3=[]
+
+    # Change the orientation of the path for better grasping
+    start_orientation1 = math.atan2(pick[1]-aico_start1[1],pick[0]-aico_start1[0])
+    traj_rrt1[:,2] = np.linspace(traj_rrt1[0,2],start_orientation1,len(traj_rrt1),endpoint=True)
+    aico_start1[2]=start_orientation1
+    print(num,": From find_aico_point, start1 and end1: ", aico_start1,aico_end1)
+    start_orientation2 = math.atan2(place[1]-aico_start2[1],place[0]-aico_start2[0])
+    traj_rrt2[:,2] = np.linspace(traj_rrt2[0,2],start_orientation2,len(traj_rrt2),endpoint=True)
+    aico_start2[2]=start_orientation2
+    print(num,": From find_aico_point, start2 and end2: ", aico_start2,aico_end2)
+
+    # Find the base trajectory during AICO
+    print(num,": ===Finding the base trajectory during AICO")
+    traj_path1=sys.path[0]+"/pickup_traj/base1.traj"
+    traj_path2=sys.path[0]+"/pickup_traj/base2.traj"
+    x1,y1 = my_aico_traj_new(aico_start1,aico_end1,base_for_pickup,20,traj_path1)
+    x2,y2 = my_aico_traj_new(aico_start2,aico_end2,base_for_place,20,traj_path2)
+
+    # Plot the base trajectory
+    if plot:
+        plt.plot(traj_rrt1_full[:,0],traj_rrt1_full[:,1],'xr')
+        plt.plot(traj_rrt2_full[:,0],traj_rrt2_full[:,1],'xg')
+        plt.plot(traj_rrt3_full[:,0],traj_rrt3_full[:,1],'xb')
+        plt.plot(pick[0],pick[1],'or')
+        plt.plot(place[0],place[1],'or')
+        plt.plot(end[0][0],end[0][1],'or')
+        if end[1]:
+            plt.plot(base_for_end[0],base_for_end[1],'ob')
+        circle1 = plt.Circle((base_for_pickup[0],base_for_pickup[1]), 0.5, color='r',fill=False)
+        circle2 = plt.Circle((base_for_place[0],base_for_place[1]), 0.5, color='r',fill=False)
+        rt1 = plt.Rectangle((0.75,1.75),0.5,0.5)
+        rt2 = plt.Rectangle((0,-1.05),1.4,0.7)
+        plt.gca().add_patch(circle1)
+        plt.gca().add_patch(circle2)
+        plt.gca().add_patch(rt1)
+        plt.gca().add_patch(rt2)
+        color1 = [str(i/len(x1)) for i in range(len(x1))]
+        color2 = [str(i/len(x2)) for i in range(len(x2))]
+        plt.scatter(x1,y1,s=100,c=color1)
+        plt.scatter(x2,y2,s=100,c=color2)
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.savefig(sys.path[0]+"/pickup_traj/Trajectories-"+num+".png")
+        plt.show()
+    
+    print(num,": ===Finding the arm and base trajectory for grasping")
+    traj_aico1 = pickup_aico(pick,traj_path1,scene_list,gripper_orientation=0,debug=0,doplot=0)
+    traj_aico2 = pickup_aico(place,traj_path2,scene_list,gripper_orientation=0,debug=0,doplot=0)
+
+    # Move in RViz
+    if debug:
+        print("ALL DONE, Looping the solution in RViz")
+        arm_traj = [0,0,-np.pi/2,-np.pi/2,0]
+        traj_rrt1 = np.concatenate((traj_rrt1,np.resize(arm_traj,(len(traj_rrt1),5))), axis=1)
+        traj_rrt2 = np.concatenate((traj_rrt2,np.resize(arm_traj,(len(traj_rrt2),5))), axis=1)
+        if len(traj_rrt3)>0:
+            traj_rrt3 = np.concatenate((traj_rrt3,np.resize(arm_traj,(len(traj_rrt3),5))), axis=1)
+            my_pickup(np.concatenate((traj_rrt1,traj_aico1,traj_rrt2,traj_aico2,traj_rrt3), axis=0),pick,scene_list)
+        else:
+            my_pickup(np.concatenate((traj_rrt1,traj_aico1,traj_rrt2,traj_aico2), axis=0),pick,scene_list)
+    print(num,": Planning done")
+    return [traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2],next_start
+
+
+# Settings
+
+rospy.init_node("YOLO")
+spawn_position = [0,0,0]
+start_position = [0,0,0]
+end_position = spawn_position
+place_position = [1,2,0.7]
+scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene"]
+scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
+
+can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
+
+
+# traj1,next_start = plan(1,scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=1,debug=0)
+# next_start = [0.7092, 0.9355 ,0.1257]
+# traj2,next_start = plan(2,scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=1,debug=0)
+next_start = [1.1993, 0.8738 ,0.9317]
+traj3,next_start = plan(3,scene_list,scene_list_rrt,next_start,can_position_list[2],place_position,[end_position,0],plot=1,debug=0)
