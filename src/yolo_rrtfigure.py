@@ -64,6 +64,8 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
         plt.plot(pick[0],pick[1],'or')
         plt.plot(place[0],place[1],'or')
         plt.plot(end[0][0],end[0][1],'or')
+        plt.plot(base_for_pickup[0],base_for_pickup[1],'xr')
+        plt.plot(base_for_place[0],base_for_place[1],'xr')
         if end[1]:
             plt.plot(base_for_end[0],base_for_end[1],'ob')
         circle1 = plt.Circle((base_for_pickup[0],base_for_pickup[1]), 0.5, color='r',fill=False)
@@ -74,13 +76,16 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
         plt.gca().add_patch(circle2)
         plt.gca().add_patch(rt1)
         plt.gca().add_patch(rt2)
-        color1 = [str(i/len(x1)) for i in range(len(x1))]
-        color2 = [str(i/len(x2)) for i in range(len(x2))]
+        color1 = np.array([[i/(len(x1)-1)*(255-128)+128,0,i/(len(x1)-1)*(255-128)+128] for i in range(len(x1))])/255
+        color2 = np.array([[i/(len(x2)-1)*(255-128)+128,0,i/(len(x2)-1)*(255-128)+128] for i in range(len(x2))])/255
         plt.scatter(x1,y1,s=100,c=color1)
         plt.scatter(x2,y2,s=100,c=color2)
         plt.gca().set_aspect('equal', adjustable='box')
-        plt.savefig(sys.path[0]+"/pickup_traj/Trajectories-"+num+".png")
-        plt.show()
+        plt.gca().set_xlim([-0.5, 2])
+        plt.gca().set_ylim([-2, 2.5])
+        plt.savefig(sys.path[0]+"/pickup_traj/Trajectories-"+str(num)+".png")
+        # plt.show()
+        plt.clf()
     
     print(num,": ===Finding the arm and base trajectory for grasping")
     traj_aico1 = pickup_aico(pick,traj_path1,scene_list,gripper_orientation=0,debug=0,doplot=0)
@@ -111,11 +116,11 @@ place_position = [1,2,0.7]
 scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene"]
 scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
 
-can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
+# can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
+can_position_list=[[1.2, -0.98,0.8],[0.38, -0.98,0.8],[1.2, -0.37,0.8]]
 
-
-# traj1,next_start = plan(1,scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=1,debug=0)
+traj1,next_start = plan(1,scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=1,debug=0)
 # next_start = [0.7092, 0.9355 ,0.1257]
-# traj2,next_start = plan(2,scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=1,debug=0)
-next_start = [1.1993, 0.8738 ,0.9317]
+traj2,next_start = plan(2,scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=1,debug=0)
+# next_start = [1.1993, 0.8738 ,0.9317]
 traj3,next_start = plan(3,scene_list,scene_list_rrt,next_start,can_position_list[2],place_position,[end_position,0],plot=1,debug=0)

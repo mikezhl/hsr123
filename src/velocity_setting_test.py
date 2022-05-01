@@ -41,13 +41,13 @@ def prepare_rrt_new(base_list,v_max,acceleration,debug=0):
     base_list = base_list[1::]
     base_vel=np.array(base_vel)
     if debug:
-        plt.plot(time_list,(base_vel[:,0]**2+base_vel[:,1]**2)**0.5,"ro",label="velocity-now")
-        plt.plot(time_list,cum,"bo",label="distance-now")
+        plt.plot(time_list,(base_vel[:,0]**2+base_vel[:,1]**2)**0.5,"ro",label="Velocity")
+        plt.plot(time_list,cum,"bo",label="Distance")
         # time_before = cum[-1]/0.03
         # plt.plot([0,time_before],[0.03,0.03],"r--",label="velocity-before")
         # plt.plot([0,time_before],[0,cum[-1]],"b--",label="distance-before")
-        plt.xlabel("Time /s")
-        plt.ylabel("m/s or m")
+        plt.xlabel("Time: s")
+        plt.ylabel("Distance and velocity: m and m/s")
         plt.legend()
         plt.show()
     p_base_list = [base_point(base_list[i,:],base_vel[i]) for i in range(len(base_list))]
@@ -56,12 +56,12 @@ def prepare_rrt_new(base_list,v_max,acceleration,debug=0):
 spawn_position = [0,0,0]
 v_max = 0.4
 acceleration = 0.1
-traj=pickle.load(open(sys.path[0]+'/pickle/traj2.pkl', 'rb'))
+traj=pickle.load(open(sys.path[0]+'/pickle/traj3.pkl', 'rb'))
 
 traj_rrt1,traj_rrt2,traj_rrt3,traj_aico1,traj_aico2 = traj
 
 KDLFrame_startbase = exo.KDLFrame([spawn_position[0],spawn_position[1],0,0,0,spawn_position[2]])
-base_list = np.array([my_traj_transform(traj_rrt2[i], KDLFrame_startbase) for i in range(len(traj_rrt2))])
+base_list = np.array([my_traj_transform(traj_rrt1[i], KDLFrame_startbase) for i in range(len(traj_rrt2))])
 p_base_list_1 = prepare_rrt_new(base_list,v_max,acceleration,1)
 
 # print(p_base_list_1)
