@@ -5,7 +5,7 @@ import hsrb_interface
 import pyexotica as exo
 import threading
 import pickle
-
+import time
 from pickup_ik import pickup_ik
 from pickup_rrt import pickup_rrt_loop
 from pickup_aico import pickup_aico
@@ -27,6 +27,7 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
     traj_rrt2_full = pickup_rrt_loop(base_for_pickup[0:3],base_for_place[0:3],scene_list_rrt,num=5,debug=0)
     if end[1]:
         base_for_end = pickup_ik(end[0],scene_list,debug=0)
+        print(base_for_end)
         traj_rrt3_full = pickup_rrt_loop(base_for_place[0:3],base_for_end[0:3],scene_list_rrt,num=5,debug=0)
     else:
         traj_rrt3_full = pickup_rrt_loop(base_for_place[0:3],end[0],scene_list_rrt,num=5,debug=0)
@@ -61,19 +62,31 @@ def plan(num,scene_list,scene_list_rrt,start,pick,place,end,plot=1,debug=1):
         plt.plot(traj_rrt1_full[:,0],traj_rrt1_full[:,1],'xr')
         plt.plot(traj_rrt2_full[:,0],traj_rrt2_full[:,1],'xg')
         plt.plot(traj_rrt3_full[:,0],traj_rrt3_full[:,1],'xb')
-        plt.plot(pick[0],pick[1],'og')
-        plt.plot(place[0],place[1],'og')
+        plt.plot(pick[0],pick[1],'or')
+        plt.plot(place[0],place[1],'or')
+        plt.plot(end[0][0],end[0][1],'or')
+        plt.plot(base_for_pickup[0],base_for_pickup[1],'xr')
+        plt.plot(base_for_place[0],base_for_place[1],'xr')
+        if end[1]:
+            plt.plot(base_for_end[0],base_for_end[1],'ob')
         circle1 = plt.Circle((base_for_pickup[0],base_for_pickup[1]), 0.5, color='r',fill=False)
         circle2 = plt.Circle((base_for_place[0],base_for_place[1]), 0.5, color='r',fill=False)
+        rt1 = plt.Rectangle((0.75,1.75),0.5,0.5)
+        rt2 = plt.Rectangle((0,-1.05),1.4,0.7)
         plt.gca().add_patch(circle1)
         plt.gca().add_patch(circle2)
-        color1 = [str(i/len(x1)) for i in range(len(x1))]
-        color2 = [str(i/len(x2)) for i in range(len(x2))]
+        plt.gca().add_patch(rt1)
+        plt.gca().add_patch(rt2)
+        color1 = np.array([[i/(len(x1)-1)*(255-128)+128,0,i/(len(x1)-1)*(255-128)+128] for i in range(len(x1))])/255
+        color2 = np.array([[i/(len(x2)-1)*(255-128)+128,0,i/(len(x2)-1)*(255-128)+128] for i in range(len(x2))])/255
         plt.scatter(x1,y1,s=100,c=color1)
         plt.scatter(x2,y2,s=100,c=color2)
         plt.gca().set_aspect('equal', adjustable='box')
-        plt.savefig(sys.path[0]+"/pickup_traj/Trajectories.png")
+        plt.gca().set_xlim([-0.5, 2])
+        plt.gca().set_ylim([-2, 2.5])
+        # plt.savefig(sys.path[0]+"/pickup_traj/Trajectories-"+str(num)+".png")
         plt.show()
+        # plt.clf()
     
     print(num,": ===Finding the arm and base trajectory for grasping")
     traj_aico1 = pickup_aico(pick,traj_path1,scene_list,gripper_orientation=0,debug=0,doplot=0)
@@ -194,7 +207,7 @@ end_position = spawn_position
 place_position = [1,2,0.7]
 scene_list_rrt = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene"]
 scene_list = ["{hsr123}/resources/meeting_room_table.scene","{hsr123}/resources/box.scene","{hsr123}/resources/soda_can.scene"]
-
+start_time = time.time()
 # Init
 if gazebo:
     try:
@@ -210,10 +223,11 @@ if gazebo:
     can_position_list = detect_all(41)
     can_position_list = [my_transform_can_yolo_list(i,spawn_position) for i in can_position_list]
     print(can_position_list)
-    # can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
+    # can_position_list = [[1.1884701429405584, -0.36972248071686037, 0.8018386006973348], [1.240909729448488, -0.9876807310897742, 0.7960044834445837], [0.10180320288772973, -0.9867615973407118, 0.7994108302538148]]
 
 else:
     can_position_list = [[1.1883571178189685, -0.3702856919250638, 0.7998437373020126], [0.3893963418017058, -0.3677819470055569, 0.8017777247505182], [0.7914706058544925, -0.9882949445584605, 0.798380758036232]]
+yolo_detect_time = round(time.time()-start_time,2)
 
 # Multithreading version (Wasted)=================================================================================
 # yolo = threading.Thread(target=follow)
@@ -245,6 +259,7 @@ else:
 #     follow(str(i)+"-RUNNING",client_all,dt,p_all[i])
 
 # Debug version========================================================================================
+start_time = time.time()
 traj1,next_start = plan(1,scene_list,scene_list_rrt,start_position,can_position_list[0],place_position,[can_position_list[1],1],plot=0,debug=1-gazebo)
 traj2,next_start = plan(2,scene_list,scene_list_rrt,next_start,can_position_list[1],place_position,[can_position_list[2],1],plot=0,debug=1-gazebo)
 traj3,next_start = plan(3,scene_list,scene_list_rrt,next_start,can_position_list[2],place_position,[end_position,0],plot=0,debug=1-gazebo)
@@ -257,7 +272,12 @@ traj3=pickle.load(open('pickle/traj3.pkl', 'rb'))
 p_list1 = pre_follow(1,traj1,spawn_position,v_max,acceleration,dt,debug=0)
 p_list2 = pre_follow(2,traj2,spawn_position,v_max,acceleration,dt,debug=0)
 p_list3 = pre_follow(3,traj3,spawn_position,v_max,acceleration,dt,debug=0)
+yolo_plan_time = round(time.time()-start_time,2)
+
+start_time = time.time()
 follow(1,client_all,dt,p_list1)
 follow(2,client_all,dt,p_list2)
 follow(3,client_all,dt,p_list3)
+yolo_operation_time = round(time.time()-start_time,2)
 
+print("Time taken: 1)Detection: ",yolo_detect_time,"; 2)Planning: ",yolo_plan_time,"; 3)Operation: ",yolo_operation_time,". Total: ",yolo_operation_time+yolo_detect_time+yolo_plan_time)

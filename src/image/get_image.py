@@ -14,4 +14,5 @@ def get_image(debug=0):
         return cv_image
 
 if __name__ == '__main__':
+    rospy.init_node("test")
     get_image(1)
