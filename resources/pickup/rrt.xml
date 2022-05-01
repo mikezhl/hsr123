@@ -17,8 +17,8 @@
 
     <Maps>
       <CollisionCheck Name="Collision1" SelfCollision="0" SafeDistance="0.10"/>
-      <!-- SafeDistance is 0.1 for pickup -->
-      <CollisionCheck Name="Collision2" SelfCollision="1"/>
+      <!-- Collision2 is 1 for yolo1 -->
+      <CollisionCheck Name="Collision2" SelfCollision="0"/>
     </Maps>
 
     <Equality>

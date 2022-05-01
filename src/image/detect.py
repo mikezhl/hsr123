@@ -153,19 +153,20 @@ def detect_all(target_id):
             whole_body = robot.get('whole_body')
             # print(float(current_pose[0])-yaw,float(current_pose[1])+pitch)
             whole_body.move_to_joint_positions({'head_pan_joint': float(current_pose[0])-yaw,"head_tilt_joint":float(current_pose[1])+pitch})
-            rospy.sleep(2)
-            status = 0
-            temp_temp_target_list = detect(41)
-            # print("temp_temp_target_list",temp_temp_target_list)
-            for temp_temp_target in temp_temp_target_list:
-                temp_target_vector = get_vector(temp_temp_target)
-                # print(temp_target_vector)
-                if abs(temp_target_vector[0])<0.04 and abs(temp_target_vector[1])<0.04:
-                    target_vector_new = temp_target_vector
-                    status = 1
-            if status==0:
-                print("Failed to find distance")
-                continue
+            rospy.sleep(4)
+            target_vector_new=get_vector([[],[319, 239, 2, 2]])
+            # status = 0
+            # temp_temp_target_list = detect(41)
+            # # print("temp_temp_target_list",temp_temp_target_list)
+            # for temp_temp_target in temp_temp_target_list:
+            #     temp_target_vector = get_vector(temp_temp_target)
+            #     # print(temp_target_vector)
+            #     if abs(temp_target_vector[0])<0.04 and abs(temp_target_vector[1])<0.04:
+            #         target_vector_new = temp_target_vector
+            #         status = 1
+            # if status==0:
+            #     print("Failed to find distance")
+            #     continue
             target_point = PointStamped()
             target_point.header.frame_id = "head_rgbd_sensor_link"
             target_point.point.x = target_vector_new[0]
@@ -181,7 +182,7 @@ def detect_all(target_id):
             new=1
             for exist in target_list:
                 dis = np.sum((np.array(xyz)-np.array(exist))**2)**0.5
-                if dis<0.05:
+                if dis<0.1:
                     new=0
                     break
             if new:

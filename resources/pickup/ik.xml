@@ -32,7 +32,7 @@
                 </EndEffector>
             </EffAxisAlignment>
 
-            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="1" WorldMargin="0.2" RobotMargin="0.01"/>
+            <SmoothCollisionDistance Name="SCD" CheckSelfCollision="1" WorldMargin="0.3" RobotMargin="0.01"/>
             <!-- <SumOfPenetrations Name="SumOfPenetrations" CheckSelfCollision="0" WorldMargin="0.03" RobotMargin="0.01"/> -->
             <Distance Name="Distance">
                 <EndEffector>
@@ -51,9 +51,9 @@
             <!-- Collision avoidance -->
             <Task Task="SCD" Rho="1e2"/>
             <!-- <Task Task="SumOfPenetrations" Rho="1e2"/> -->
-            <Task Task="Distance" Rho="5e2"/>
+            <Task Task="Distance" Rho="0"/>
         </Cost>
 
-        <!-- <W>1 1 1 1 1 1 1 1</W> -->
+        <W>1 1 1 100000 1 1 1 1</W>
     </UnconstrainedEndPoseProblem>
 </PlannerDemoConfig>
