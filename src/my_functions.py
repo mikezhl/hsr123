@@ -34,12 +34,12 @@ def my_plot_analysis(problem,solution,scene):
     '''Plot some fig about the solver for analysis'''
     # Show convergence plot
     fig = plt.figure(1)
-    plt.plot(problem.get_cost_evolution()[0], problem.get_cost_evolution()[1])
+    plt.plot(problem.get_cost_evolution()[0], problem.get_cost_evolution()[1],"o")
     plt.yscale('log')
     plt.ylabel('Cost')
-    plt.xlabel('Time (s)')
+    plt.xlabel('Time /s')
     plt.xlim(0,np.max(problem.get_cost_evolution()[0]))
-    plt.title('Convergence')
+    plt.title('Convergence of the cost')
 
     # Show cost breakdown
     fig = plt.figure(2)
@@ -66,9 +66,11 @@ def my_plot_analysis(problem,solution,scene):
         costs['Task'][t] = problem.get_scalar_task_cost(t)
         costs['Transition'][t] = problem.get_scalar_transition_cost(t)
     for cost in costs:
-        plt.plot(costs[cost], label=cost)
+        plt.plot(np.array(range(int(problem.T)))*problem.tau,costs[cost], label=cost)
     plt.legend()
-    plt.xlim(0,problem.T)
+    plt.xlim(0,problem.T*problem.tau)
+    plt.ylabel('Cost')
+    plt.xlabel('Along the trajectory /s')
     plt.title('Cost breakdown across trajectory per task')
     plt.show()
 
